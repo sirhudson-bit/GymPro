@@ -4,23 +4,23 @@
     "issues": [],
     "counts": {
       "interactive": 19,
-      "textNodes": 44
+      "textNodes": 42
     }
   },
   "members": {
     "url": "#/members",
     "issues": [],
     "counts": {
-      "interactive": 28,
-      "textNodes": 50
+      "interactive": 23,
+      "textNodes": 27
     }
   },
   "contracts": {
     "url": "#/contracts",
     "issues": [],
     "counts": {
-      "interactive": 25,
-      "textNodes": 35
+      "interactive": 23,
+      "textNodes": 25
     }
   },
   "finance": {
@@ -28,47 +28,47 @@
     "issues": [],
     "counts": {
       "interactive": 20,
-      "textNodes": 26
+      "textNodes": 12
     }
   },
   "attendance": {
     "url": "#/attendance",
     "issues": [],
     "counts": {
-      "interactive": 22,
-      "textNodes": 26
+      "interactive": 21,
+      "textNodes": 23
     }
   },
   "kiosk": {
     "url": "#/kiosk",
     "issues": [],
     "counts": {
-      "interactive": 18,
-      "textNodes": 12
+      "interactive": 19,
+      "textNodes": 18
     }
   },
   "pos": {
     "url": "#/pos",
     "issues": [],
     "counts": {
-      "interactive": 24,
-      "textNodes": 22
+      "interactive": 22,
+      "textNodes": 20
     }
   },
   "classes": {
     "url": "#/classes",
     "issues": [],
     "counts": {
-      "interactive": 19,
-      "textNodes": 32
+      "interactive": 24,
+      "textNodes": 39
     }
   },
   "lockers": {
     "url": "#/lockers",
     "issues": [],
     "counts": {
-      "interactive": 19,
-      "textNodes": 11
+      "interactive": 17,
+      "textNodes": 8
     }
   },
   "reports": {
@@ -76,31 +76,31 @@
     "issues": [],
     "counts": {
       "interactive": 18,
-      "textNodes": 49
+      "textNodes": 47
     }
   },
   "support": {
     "url": "#/support",
     "issues": [],
     "counts": {
-      "interactive": 19,
-      "textNodes": 21
+      "interactive": 18,
+      "textNodes": 17
     }
   },
   "license": {
     "url": "#/license",
     "issues": [],
     "counts": {
-      "interactive": 23,
-      "textNodes": 22
+      "interactive": 24,
+      "textNodes": 39
     }
   },
   "settings": {
     "url": "#/settings",
     "issues": [],
     "counts": {
-      "interactive": 43,
-      "textNodes": 44
+      "interactive": 42,
+      "textNodes": 43
     }
   },
   "help": {
@@ -108,7 +108,7 @@
     "issues": [],
     "counts": {
       "interactive": 35,
-      "textNodes": 56
+      "textNodes": 57
     }
   }
 }

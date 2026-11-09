@@ -19,6 +19,7 @@
     "@fontsource/vazirmatn": "^5.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "jsbarcode": "^3.11.6",
     "lucide-react": "^0.460.0",
     "next": "^15.1.9",
     "qrcode": "^1.5.4",

@@ -304,6 +304,8 @@ function Tour({ onDone }: { onDone: () => void }) {
 
 export default function App() {
   const { user, setUser, view, setView, theme, toggleTheme, license, setLicense, toast, accent, setAccent, tint, setTint } = useStore();
+  // پنجرهٔ کیوسک (?kiosk=1) فقط خود صفحهٔ کیوسک را نشان می‌دهد، بدون سایدبار
+  const kioskOnly = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('kiosk') === '1';
   const [ready, setReady] = useState(false);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [tour, setTour] = useState(false);
@@ -445,6 +447,14 @@ export default function App() {
 
   if (needsSetup) return <SetupWizard onDone={() => { setNeedsSetup(false); setTour(true); }} />;
   if (!user) return <Login onDone={() => {}} />;
+
+  if (kioskOnly) {
+    return (
+      <div className="min-h-screen p-4" style={{ background: 'var(--canvas)' }}>
+        <Kiosk />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex overflow-hidden">

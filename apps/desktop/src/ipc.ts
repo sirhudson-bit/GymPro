@@ -18,6 +18,9 @@ const resetAttempts = new Map<string, { count: number; since: number }>();
 // سرور پیش‌فرض لایسنس (همان پنلی که کلیدها را می‌سازد). با settings[license.server] قابل تغییر است.
 const DEFAULT_LICENSE_SERVER = process.env.GYMPRO_LICENSE_SERVER ?? 'https://gym.academyr.ir';
 
+// همان مبدأ سفارشی که main.ts برای بارگذاری رابط ثبت می‌کند (پنجرهٔ کیوسک هم از همین استفاده می‌کند)
+const APP_ORIGIN = 'app://gympro';
+
 
 export const getSession = () => currentUser;
 
@@ -218,6 +221,10 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
       members.restore(String(p.id));
       return { ok: true };
     },
+    'members:remove': (p) => {
+      role('owner', 'manager');
+      return members.remove(String(p.id));
+    },
 
     'cards:issue': (p) => {
       auth();
@@ -371,6 +378,29 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
     'pos:sales': () => pos.sales(),
     'pos:lowStock': () => pos.lowStock(),
 
+    // پنجرهٔ دوم برای نمایشگر دوم (کیوسک) — بدون سایدبار و با صفحهٔ تمام
+    'kiosk:openWindow': () => {
+      role('owner', 'manager', 'receptionist');
+      const existing = BrowserWindow.getAllWindows().find((w) => w.getTitle() === 'GymPro Kiosk' || (w as unknown as { __kiosk?: boolean }).__kiosk === true);
+      if (existing) {
+        existing.show();
+        existing.focus();
+        return { ok: true, reused: true };
+      }
+      const win = new BrowserWindow({
+        width: 1280,
+        height: 800,
+        title: 'GymPro Kiosk',
+        backgroundColor: '#0b1220',
+        autoHideMenuBar: true,
+        webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false },
+      });
+      (win as unknown as { __kiosk?: boolean }).__kiosk = true;
+      win.loadURL(`${APP_ORIGIN}/index.html?kiosk=1#/kiosk`);
+      win.once('ready-to-show', () => win.show());
+      return { ok: true, reused: false };
+    },
+
     'lockers:list': () => lockers.list(),
     'lockers:create': (p) => {
       role('owner', 'manager');
@@ -384,6 +414,14 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
       role('owner', 'manager', 'receptionist');
       lockers.endRent(String(p.rentalId));
       return { ok: true };
+    },
+    'lockers:update': (p) => {
+      role('owner', 'manager');
+      return lockers.update(String(p.id), { code: p.code, price: p.price === undefined ? undefined : Number(p.price), status: p.status });
+    },
+    'lockers:remove': (p) => {
+      role('owner', 'manager');
+      return lockers.remove(String(p.id));
     },
 
     'classes:list': () => classes.list(),
@@ -402,10 +440,49 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
       auth();
       return classes.enroll(String(p.classId), String(p.memberId));
     },
+    'classes:createMany': (p) => {
+      role('owner', 'manager');
+      return classes.createMany({
+        name: String(p.name),
+        trainerId: p.trainerId ?? null,
+        weekdays: Array.isArray(p.weekdays) ? p.weekdays.map(Number) : [],
+        startTime: String(p.startTime ?? '18:00'),
+        endTime: String(p.endTime ?? '19:30'),
+        capacity: Number(p.capacity ?? 10),
+      });
+    },
+    'classes:update': (p) => {
+      role('owner', 'manager');
+      return classes.update(String(p.id), {
+        name: p.name,
+        trainerId: p.trainerId,
+        weekday: p.weekday === undefined ? undefined : Number(p.weekday),
+        startTime: p.startTime,
+        endTime: p.endTime,
+        capacity: p.capacity === undefined ? undefined : Number(p.capacity),
+      });
+    },
+    'classes:remove': (p) => {
+      role('owner', 'manager');
+      return classes.remove(String(p.id));
+    },
     'trainers:list': () => trainers.list(),
     'trainers:create': (p) => {
       role('owner', 'manager');
       return trainers.create({ fullName: String(p.fullName), mobile: p.mobile ?? null, specialty: p.specialty ?? null, commissionRateBp: Number(p.commissionRateBp ?? 0) });
+    },
+    'trainers:update': (p) => {
+      role('owner', 'manager');
+      return trainers.update(String(p.id), {
+        fullName: p.fullName,
+        mobile: p.mobile,
+        specialty: p.specialty,
+        commissionRateBp: p.commissionRateBp === undefined ? undefined : Number(p.commissionRateBp),
+      });
+    },
+    'trainers:remove': (p) => {
+      role('owner', 'manager');
+      return trainers.remove(String(p.id));
     },
 
     'body:list': (p) => body.list(String(p.memberId)),

@@ -5,7 +5,8 @@ const port = process.argv[3] ?? '9400';
 const VIEWS = ['dashboard', 'members', 'contracts', 'finance', 'attendance', 'kiosk', 'pos', 'classes', 'lockers', 'reports', 'support', 'license', 'settings', 'help'];
 
 const list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-const page = list.find((t) => t.type === 'page');
+// پنجرهٔ کیوسک (?kiosk=1) هم یک page است؛ آزمون باید روی پنجرهٔ اصلی اجرا شود
+const page = list.find((t) => t.type === 'page' && !String(t.url).includes('kiosk=1')) ?? list.find((t) => t.type === 'page');
 if (!page) {
   console.error('no page target');
   process.exit(1);

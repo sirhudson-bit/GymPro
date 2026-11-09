@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, RefreshCw, Snowflake, Search, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Snowflake, Search, Trash2, XCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useStore } from '@/lib/store';
-import { Badge, Button, DateInput, Empty, Field, Modal, MoneyInput, Row, SearchBox, Select, Table, TextArea, TextInput, tomanToRial } from '@/components/ui';
+import { Badge, Button, Confirm, DateInput, Empty, Field, Modal, MoneyInput, Row, SearchBox, Select, Table, TextArea, TextInput, tomanToRial } from '@/components/ui';
 import { daysLeftLabel, formatJalali, formatMoney, parseJalaliInput, toPersianDigits, todayJalali } from '@/lib/format';
 
 const KIND: Record<string, string> = { time: 'زمانی', session: 'جلسه‌ای', hybrid: 'ترکیبی', vip: 'خصوصی', guest: 'مهمان' };
@@ -19,6 +19,8 @@ export default function Contracts() {
   const [planModal, setPlanModal] = useState<any | null>(null);
   const [renew, setRenew] = useState<any | null>(null);
   const [freeze, setFreeze] = useState<any | null>(null);
+  const [cancel, setCancel] = useState<any | null>(null);
+  const [dropPlan, setDropPlan] = useState<any | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -84,6 +86,9 @@ export default function Contracts() {
                   <div className="flex gap-1">
                     <Button variant="ghost" onClick={() => setRenew(c)} icon={<RefreshCw size={13} />}>تمدید</Button>
                     <Button variant="ghost" onClick={() => setFreeze(c)} icon={<Snowflake size={13} />}>فریز</Button>
+                    {c.status === 'active' ? (
+                      <Button variant="ghost" onClick={() => setCancel(c)} icon={<XCircle size={13} />} aria-label={`لغو قرارداد ${c.memberName}`}>لغو</Button>
+                    ) : null}
                   </div>
                 </td>
               </tr>
@@ -101,7 +106,10 @@ export default function Contracts() {
               <td className="td tabular-nums">{formatMoney(p.price_irr)}</td>
               <td className="td">{p.is_active ? <Badge tone="ok">فعال</Badge> : <Badge>غیرفعال</Badge>}</td>
               <td className="td">
-                <Button variant="ghost" onClick={() => setPlanModal({ ...p, price: String(Math.round(p.price_irr / 10)), durationDays: String(p.duration_days ?? ''), sessionCount: String(p.session_count ?? '') })}>ویرایش</Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" onClick={() => setPlanModal({ ...p, price: String(Math.round(p.price_irr / 10)), durationDays: String(p.duration_days ?? ''), sessionCount: String(p.session_count ?? '') })}>ویرایش</Button>
+                  <Button variant="ghost" onClick={() => setDropPlan(p)} icon={<Trash2 size={13} />} aria-label={`حذف تعرفه ${p.name}`}>حذف</Button>
+                </div>
               </td>
             </tr>
           ))}
@@ -111,6 +119,48 @@ export default function Contracts() {
       <NewContract open={creating} onClose={() => setCreating(false)} onSaved={() => { setCreating(false); load(); }} plans={plans} />
 
       <PlanModal plan={planModal} onClose={() => setPlanModal(null)} onSaved={() => { setPlanModal(null); load(); }} />
+
+      <Confirm
+        open={Boolean(cancel)}
+        danger
+        title="لغو قرارداد"
+        message={`قرارداد ${cancel?.memberName ?? ''} لغو می‌شود؛ دیگر در تردد فعال حساب نمی‌شود و پرداخت‌های ثبت‌شده دست‌نخورده می‌مانند. ادامه می‌دهید؟`}
+        confirmLabel="لغو قرارداد"
+        onClose={() => setCancel(null)}
+        onConfirm={async () => {
+          const target = cancel;
+          setCancel(null);
+          if (!target) return;
+          try {
+            await api.cancelContract({ contractId: target.id, reason: 'لغو توسط مدیر' });
+            toast('قرارداد لغو شد');
+            load();
+          } catch (e: any) {
+            toast(e.message, 'bad');
+          }
+        }}
+      />
+
+      <Confirm
+        open={Boolean(dropPlan)}
+        danger
+        title="حذف تعرفه"
+        message={`تعرفهٔ «${dropPlan?.name ?? ''}» حذف (غیرفعال) می‌شود. قراردادهای صادرشده با آن دست‌نخورده می‌مانند. ادامه می‌دهید؟`}
+        confirmLabel="حذف تعرفه"
+        onClose={() => setDropPlan(null)}
+        onConfirm={async () => {
+          const target = dropPlan;
+          setDropPlan(null);
+          if (!target) return;
+          try {
+            await api.removePlan(target.id);
+            toast('تعرفه حذف شد');
+            load();
+          } catch (e: any) {
+            toast(e.message, 'bad');
+          }
+        }}
+      />
 
       <Modal open={Boolean(renew)} onClose={() => setRenew(null)} title="تمدید قرارداد" footer={
         <>

@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { KeySquare, Plus } from 'lucide-react';
+import { KeySquare, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useStore } from '@/lib/store';
-import { Badge, Button, Field, Modal, MoneyInput, Table, TextInput, tomanToRial } from '@/components/ui';
+import { Badge, Button, Confirm, Field, Modal, MoneyInput, Table, TextInput, tomanToRial } from '@/components/ui';
 import { formatJalali, formatMoney, toPersianDigits, todayJalali, parseJalaliInput } from '@/lib/format';
 
 export default function Lockers() {
@@ -12,6 +12,8 @@ export default function Lockers() {
   const [rows, setRows] = useState<any[]>([]);
   const [newLocker, setNewLocker] = useState(false);
   const [rent, setRent] = useState<any | null>(null);
+  const [edit, setEdit] = useState<{ id: string; code: string; price: string; status: string } | null>(null);
+  const [drop, setDrop] = useState<any | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -40,6 +42,7 @@ export default function Lockers() {
               <span className="font-bold text-[14px] flex items-center gap-1"><KeySquare size={14} /> {l.code}</span>
               <Badge tone={l.status === 'free' ? 'ok' : l.status === 'rented' ? 'warn' : 'bad'}>{l.status === 'free' ? 'آزاد' : l.status === 'rented' ? 'اجاره' : 'خراب'}</Badge>
             </div>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--muted)' }}>{formatMoney(l.monthly_price_irr)} ماهانه</p>
             {l.holderName ? (
               <>
                 <p className="text-[12px] mt-1">{l.holderName}</p>
@@ -55,6 +58,18 @@ export default function Lockers() {
             ) : (
               <Button variant="ghost" className="mt-2 w-full" onClick={() => setRent(l)} disabled={l.status !== 'free'}>اجاره</Button>
             )}
+            <div className="flex gap-1 mt-2">
+              <Button
+                variant="ghost"
+                className="flex-1"
+                onClick={() => setEdit({ id: l.id, code: l.code, price: String(Math.round(Number(l.monthly_price_irr ?? 0) / 10)), status: l.status })}
+                icon={<Pencil size={12} />}
+                aria-label={`ویرایش کمد ${l.code}`}
+              >
+                ویرایش
+              </Button>
+              <Button variant="ghost" onClick={() => setDrop(l)} icon={<Trash2 size={12} />} aria-label={`حذف کمد ${l.code}`}>حذف</Button>
+            </div>
           </div>
         ))}
       </div>
@@ -96,6 +111,73 @@ export default function Lockers() {
           <Field label="شروع (شمسی)"><TextInput id="lk-start" defaultValue={todayJalali()} dir="ltr" style={{ textAlign: 'right' }} aria-label="تاریخ شروع" /></Field>
         </div>
       </Modal>
+
+      <Modal
+        open={Boolean(edit)}
+        onClose={() => setEdit(null)}
+        title="ویرایش کمد"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setEdit(null)}>انصراف</Button>
+            <Button
+              onClick={async () => {
+                if (!edit) return;
+                try {
+                  await api.updateLocker({ id: edit.id, code: edit.code, price: tomanToRial(edit.price), status: edit.status });
+                  toast('کمد ویرایش شد');
+                  setEdit(null);
+                  load();
+                } catch (e: any) {
+                  toast(e.message, 'bad');
+                }
+              }}
+            >
+              ذخیره تغییرات
+            </Button>
+          </>
+        }
+      >
+        {edit ? (
+          <>
+            <Field label="شماره/کد کمد" required>
+              <TextInput value={edit.code} onChange={(e) => setEdit({ ...edit, code: e.target.value })} autoFocus />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="اجاره ماهانه (تومان)">
+                <TextInput value={edit.price} onChange={(e) => setEdit({ ...edit, price: e.target.value })} dir="ltr" />
+              </Field>
+              <Field label="وضعیت" hint="کمد اجاره‌ای تا پایان اجاره قابل تغییر نیست">
+                <select className="field" value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })} aria-label="وضعیت کمد">
+                  <option value="free">آزاد</option>
+                  <option value="rented">اجاره</option>
+                  <option value="broken">خراب</option>
+                </select>
+              </Field>
+            </div>
+          </>
+        ) : null}
+      </Modal>
+
+      <Confirm
+        open={Boolean(drop)}
+        danger
+        title="حذف کمد"
+        message={`کمد «${drop?.code ?? ''}» حذف می‌شود. اگر در اجاره باشد، اول باید اجاره پایان یابد.`}
+        confirmLabel="حذف کمد"
+        onClose={() => setDrop(null)}
+        onConfirm={async () => {
+          const target = drop;
+          setDrop(null);
+          if (!target) return;
+          try {
+            await api.removeLocker(target.id);
+            toast('کمد حذف شد');
+            load();
+          } catch (e: any) {
+            toast(e.message, 'bad');
+          }
+        }}
+      />
     </div>
   );
 }

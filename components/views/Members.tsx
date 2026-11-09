@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Plus, Printer, CreditCard, UserRound, QrCode, Wallet, Pencil, Archive, RefreshCw, Download } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import JsBarcode from 'jsbarcode';
+import { Plus, Printer, CreditCard, UserRound, QrCode, Wallet, Pencil, Archive, RefreshCw, Download, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import { Badge, Button, Confirm, DateInput, Empty, Field, Modal, MoneyInput, SearchBox, Select, Table, TextArea, TextInput, Row, tomanToRial } from '@/components/ui';
@@ -18,6 +19,28 @@ export default function Members() {
   const [editing, setEditing] = useState<any>(null);
   const [card, setCard] = useState<any>(null);
   const [clubName, setClubName] = useState('');
+  const [drop, setDrop] = useState<any | null>(null);
+  const barcodeRef = useRef<SVGSVGElement | null>(null);
+
+  // بارکد خطی Code128 تا اسکنرهای لیزری یک‌بعدی هم کارت را بخوانند
+  useEffect(() => {
+    if (!card || !barcodeRef.current) return;
+    try {
+      JsBarcode(barcodeRef.current, String(card.barcode ?? ''), {
+        format: 'CODE128',
+        height: 56,
+        width: 1.9,
+        margin: 6,
+        displayValue: true,
+        fontSize: 14,
+        font: 'Vazirmatn, Tahoma, sans-serif',
+        background: '#ffffff',
+        lineColor: '#0f1620',
+      });
+    } catch {
+      /* مقدار غیرمجاز برای Code128 — بارکد نمایش داده نمی‌شود */
+    }
+  }, [card]);
   const [topup, setTopup] = useState<{ member: any; amount: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -74,7 +97,7 @@ export default function Members() {
       await img.decode();
       const club = clubName || 'کارت عضویت باشگاه';
       const W = 820;
-      const H = 1180;
+      const H = 1320;
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
@@ -97,26 +120,41 @@ export default function Members() {
         c.font = font('bold', headerSize);
       }
       c.fillText(club, W / 2, 68);
-      const qs = 560;
-      c.drawImage(img, (W - qs) / 2, 168, qs, qs);
+      const qs = 520;
+      c.drawImage(img, (W - qs) / 2, 150, qs, qs);
       c.fillStyle = '#0f1620';
-      c.font = font('bold', 46);
-      c.fillText(card.memberName ?? '', W / 2, 796);
-      c.font = font('bold', 32);
-      c.fillText(`شمارهٔ عضویت: ${toPersianDigits(card.memberNo ?? '')}`, W / 2, 856);
+      c.font = font('bold', 44);
+      c.fillText(card.memberName ?? '', W / 2, 738);
+      c.font = font('bold', 30);
+      c.fillText(`شمارهٔ عضویت: ${toPersianDigits(card.memberNo ?? '')}`, W / 2, 792);
       c.fillStyle = '#55606d';
-      c.font = font('normal', 24);
-      c.fillText(`شناسهٔ کارت: ${card.barcode}`, W / 2, 906);
+      c.font = font('normal', 22);
+      c.fillText(`شناسهٔ کارت: ${card.barcode}`, W / 2, 836);
+
+      // بارکد خطی Code128 (همان شناسه) برای اسکنرهای لیزری یک‌بعدی
+      const svgEl = barcodeRef.current;
+      if (svgEl) {
+        const xml = new XMLSerializer().serializeToString(svgEl);
+        const barcodeImg = new Image();
+        barcodeImg.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(xml)))}`;
+        await barcodeImg.decode();
+        const maxW = W - 180;
+        const scale = Math.min(maxW / barcodeImg.width, 1);
+        const bw = barcodeImg.width * scale;
+        const bh = barcodeImg.height * scale;
+        c.drawImage(barcodeImg, (W - bw) / 2, 866, bw, bh);
+      }
+
       c.strokeStyle = '#d8dee6';
       c.lineWidth = 2;
       c.beginPath();
-      c.moveTo(90, 950);
-      c.lineTo(W - 90, 950);
+      c.moveTo(90, 1140);
+      c.lineTo(W - 90, 1140);
       c.stroke();
       c.fillStyle = '#55606d';
       c.font = font('normal', 23);
-      c.fillText('این کارت را در ورودی باشگاه اسکن کنید', W / 2, 1000);
-      c.fillText('در صورت گم‌شدن، کارت جدید صادر کنید تا این کارت باطل شود', W / 2, 1040);
+      c.fillText('این کارت را در ورودی باشگاه اسکن کنید', W / 2, 1188);
+      c.fillText('در صورت گم‌شدن، کارت جدید صادر کنید تا این کارت باطل شود', W / 2, 1228);
       const dataUrl = canvas.toDataURL('image/png');
       const res: any = await api.saveImage({ dataUrl, fileName: `GymPro-card-${card.barcode}.png` });
       if (res?.canceled) return;
@@ -174,6 +212,9 @@ export default function Members() {
                   <button onClick={() => issueCard(m.id)} className="btn btn-ghost" style={{ borderColor: 'var(--edge-strong)' }} aria-label={`صدور کارت برای ${m.full_name}`}>
                     <QrCode size={13} /> کارت
                   </button>
+                  <button onClick={() => setDrop(m)} className="btn btn-ghost" style={{ borderColor: 'transparent', color: 'var(--bad)' }} aria-label={`حذف ${m.full_name}`}>
+                    <Trash2 size={13} /> حذف
+                  </button>
                 </div>
               </td>
             </tr>
@@ -204,6 +245,14 @@ export default function Members() {
               <Button variant="ghost" onClick={() => setEditing(detail.member)} icon={<Pencil size={14} />}>ویرایش</Button>
               <Button variant="ghost" onClick={() => issueCard(detail.member.id)} icon={<CreditCard size={14} />}>صدور کارت QR</Button>
               <Button variant="ghost" onClick={() => setTopup({ member: detail.member, amount: '' })} icon={<Wallet size={14} />}>شارژ کیف پول</Button>
+              <Button
+                variant="ghost"
+                style={{ color: 'var(--bad)' }}
+                onClick={() => setDrop(detail.member)}
+                icon={<Trash2 size={14} />}
+              >
+                حذف عضو
+              </Button>
               <Button
                 variant="ghost"
                 onClick={async () => {
@@ -299,11 +348,15 @@ export default function Members() {
             <p className="text-[10.5px] mt-1" style={{ color: 'var(--muted)' }}>
               شناسهٔ کارت: <span dir="ltr">{card.barcode}</span>
             </p>
+            <div className="mt-3">
+              <svg ref={barcodeRef} className="mx-auto max-w-full" aria-label={`بارکد خطی کارت ${card.barcode}`} />
+              <p className="text-[10px] mt-1" style={{ color: 'var(--muted)' }}>بارکد خطی — برای اسکنر لیزری معمولی (QR برای اسکنر دوبعدی است)</p>
+            </div>
             <div className="mt-3 p-3 rounded-xl text-right text-[11.5px] leading-6 no-print" style={{ background: 'var(--brand-wash)', border: '1px solid var(--brand-line)' }}>
               <p className="font-bold mb-1 text-[12px]">چطور این کارت را اسکن کنم؟</p>
-              <p>۱) اسکنر دوبعدی (QR) را به USB بزنید؛ ویندوز خودش می‌شناسد.</p>
-              <p>۲) در «تردد» (F4) کد را روی کارت بگیرید یا شمارهٔ عضویت بالا را تایپ و Enter بزنید.</p>
-              <p style={{ color: 'var(--muted)' }}>اسکنر لیزری یک‌بعدی این کد را نمی‌خواند. راهنمای کامل: منوی «راهنما» → «اسکن بارکد و QR».</p>
+              <p>۱) اسکنر لیزری یک‌بعدی: <b>بارکد خطی</b> زیر QR را بگیرید (کد <span dir="ltr">{card.barcode}</span> فرستاده می‌شود).</p>
+              <p>۲) اسکنر دوبعدی: QR را بگیرید. — بدون اسکنر: شمارهٔ عضویت بالا را تایپ و Enter بزنید.</p>
+              <p style={{ color: 'var(--muted)' }}>راهنمای کامل: منوی «راهنما» → «اسکن بارکد و QR».</p>
             </div>
             <p className="text-[11px] mt-2 no-print" style={{ color: 'var(--muted)' }}>کارت یکتا و قابل ابطال است؛ اگر گم شد، کارت جدید صادر کنید تا این یکی باطل شود.</p>
           </div>
@@ -339,6 +392,28 @@ export default function Members() {
           </Field>
         ) : null}
       </Modal>
+
+      <Confirm
+        open={Boolean(drop)}
+        danger
+        title="حذف عضو"
+        message={`«${drop?.full_name ?? ''}» از فهرست اعضا حذف می‌شود، کارت‌های فعالش باطل و اجارهٔ کمدش پایان می‌یابد. سابقهٔ پرداخت‌ها و قراردادها در گزارش‌ها می‌ماند و با «بازگردانی» می‌توانید برگردانید. ادامه می‌دهید؟`}
+        confirmLabel="حذف عضو"
+        onClose={() => setDrop(null)}
+        onConfirm={async () => {
+          const target = drop;
+          setDrop(null);
+          if (!target) return;
+          try {
+            const res: any = await api.removeMember(target.id);
+            toast(res?.activeContracts ? `عضو حذف شد (${res.activeContracts} قرارداد فعال داشت)` : 'عضو حذف شد');
+            if (detail?.member?.id === target.id) setDetail(null);
+            load();
+          } catch (e: any) {
+            toast(e.message, 'bad');
+          }
+        }}
+      />
     </div>
   );
 }

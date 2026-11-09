@@ -15,6 +15,7 @@ export default function Kiosk() {
   const [result, setResult] = useState<Result | null>(null);
   const [clock, setClock] = useState(new Date());
   const inputRef = useRef<HTMLInputElement>(null);
+  const isKioskWindow = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('kiosk') === '1';
 
   useEffect(() => {
     const t = setInterval(() => setClock(new Date()), 1000);
@@ -81,9 +82,39 @@ export default function Kiosk() {
       </form>
 
       <p className="text-[11.5px] mt-8" style={{ color: 'var(--muted)' }}>
-        این حالت برای نمایشگر ورودی باشگاه است؛ خروج با Esc یا برگشت به منو.
+        {isKioskWindow
+          ? 'این پنجره مخصوص نمایشگر ورودی است. برای بستن: Alt+F4 (یا دکمهٔ پایین).'
+          : 'این حالت برای نمایشگر ورودی باشگاه است؛ می‌توانید آن را روی نمایشگر دوم باز کنید.'}
       </p>
-      <button className="btn btn-ghost mt-3" onClick={() => history.back()}>بازگشت</button>
+      <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+        {isKioskWindow ? (
+          <button className="btn btn-ghost" onClick={() => window.close()}>بستن پنجرهٔ کیوسک</button>
+        ) : (
+          <>
+            <button
+              className="btn"
+              onClick={async () => {
+                try {
+                  await api.openKioskWindow();
+                  toast('پنجرهٔ کیوسک باز شد — آن را به نمایشگر دوم بکشید');
+                } catch (e: any) {
+                  toast(e.message, 'bad');
+                }
+              }}
+            >
+              نمایش روی نمایشگر دوم
+            </button>
+            <button className="btn btn-ghost" onClick={() => history.back()}>بازگشت</button>
+          </>
+        )}
+      </div>
+      <div className="max-w-md mx-auto mt-6 text-right text-[11.5px] leading-6 p-3 rounded-xl no-print" style={{ background: 'var(--brand-wash)', border: '1px solid var(--brand-line)' }}>
+        <p className="font-bold mb-1 text-[12px]">راه‌اندازی حالت کیوسک</p>
+        <p>۱) اسکنر را به USB بزنید (بارکدخوان HID یا اسکنر دوبعدی برای QR).</p>
+        <p>۲) «نمایش روی نمایشگر دوم» را بزنید؛ پنجرهٔ تازه بدون منو باز می‌شود.</p>
+        <p>۳) پنجره را با کشیدن به نمایشگر دوم ببرید و F11 بزنید تا تمام‌صفحه شود.</p>
+        <p style={{ color: 'var(--muted)' }}>بستن: Alt+F4 — ورود دستی هم ممکن است: شمارهٔ عضویت را تایپ و Enter بزنید.</p>
+      </div>
     </div>
   );
 }

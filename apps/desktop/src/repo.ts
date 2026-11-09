@@ -366,6 +366,26 @@ export const members = {
       q().run("UPDATE members SET deleted_at = NULL, status = 'active', updated_at = ? WHERE id = ?", nowIso(), id);
     });
   },
+  // حذف عضو: از همه‌جا پنهان می‌شود، کارت‌های فعالش باطل می‌شوند و با «بازگردانی» قابل برگشت است
+  remove(id: string) {
+    const member = q().get<{ id: string; full_name: string }>('SELECT id, full_name FROM members WHERE id = ? AND deleted_at IS NULL', id);
+    if (!member) throw new Error('عضو یافت نشد');
+    const activeContracts = num(
+      q().get<{ c: number }>("SELECT COUNT(*) AS c FROM contracts WHERE member_id = ? AND status = 'active' AND deleted_at IS NULL", id)?.c,
+    );
+    q().write({ entity: 'member', entityId: id, op: 'delete', version: 1, payload: { id } }, () => {
+      q().run(
+        "UPDATE member_cards SET status = 'revoked', revoked_at = ?, updated_at = ? WHERE member_id = ? AND status = 'active'",
+        nowIso(),
+        nowIso(),
+        id,
+      );
+      q().run("UPDATE locker_rentals SET status = 'ended', updated_at = ? WHERE member_id = ? AND status = 'active'", nowIso(), id);
+      q().run("UPDATE lockers SET status = 'free', updated_at = ? WHERE id IN (SELECT locker_id FROM locker_rentals WHERE member_id = ? AND end_date IS NOT NULL AND status = 'ended')", nowIso(), id);
+      q().run("UPDATE members SET deleted_at = ?, status = 'archived', updated_at = ? WHERE id = ?", nowIso(), nowIso(), id);
+    });
+    return { ok: true, activeContracts };
+  },
 };
 
 /* ────────────────────────────── cards ────────────────────────────── */
@@ -1042,6 +1062,28 @@ export const lockers = {
     q().run("UPDATE locker_rentals SET status = 'ended', updated_at = ? WHERE id = ?", nowIso(), rentalId);
     q().run("UPDATE lockers SET status = 'free', updated_at = ? WHERE id = ?", nowIso(), row.locker_id);
   },
+  update(id: string, input: { code?: string; price?: number; status?: string }) {
+    const row = q().get<{ status: string; code: string }>('SELECT status, code FROM lockers WHERE id = ? AND deleted_at IS NULL', id);
+    if (!row) throw new Error('کمد یافت نشد');
+    const code = input.code?.trim() || row.code;
+    const dup = q().get<{ id: string }>('SELECT id FROM lockers WHERE branch_id = ? AND code = ? AND id <> ? AND deleted_at IS NULL', q().branchId, code, id);
+    if (dup) throw new Error('این شمارهٔ کمد قبلاً ثبت شده است');
+    const status = input.status ?? row.status;
+    if (row.status === 'rented' && status !== 'rented') throw new Error('کمد در اجاره است؛ اول اجاره را پایان دهید');
+    q().write({ entity: 'locker', entityId: id, op: 'update', version: 1, payload: { code, status } }, () => {
+      q().run('UPDATE lockers SET code = ?, monthly_price_irr = ?, status = ?, updated_at = ?, version = version + 1 WHERE id = ?', code, num(input.price ?? 0), status, nowIso(), id);
+    });
+    return q().get('SELECT * FROM lockers WHERE id = ?', id);
+  },
+  remove(id: string) {
+    const row = q().get<{ status: string }>('SELECT status FROM lockers WHERE id = ? AND deleted_at IS NULL', id);
+    if (!row) throw new Error('کمد یافت نشد');
+    if (row.status === 'rented') throw new Error('کمد در اجاره است؛ اول اجاره را پایان دهید');
+    q().write({ entity: 'locker', entityId: id, op: 'delete', version: 1, payload: { id } }, () => {
+      q().run('UPDATE lockers SET deleted_at = ?, updated_at = ? WHERE id = ?', nowIso(), nowIso(), id);
+    });
+    return { ok: true };
+  },
 };
 
 export const classes = {
@@ -1058,6 +1100,60 @@ export const classes = {
     const id = uuidv7();
     q().run('INSERT INTO classes (id, branch_id, trainer_id, name, weekday, start_time, end_time, capacity) VALUES (?,?,?,?,?,?,?,?)', id, q().branchId, input.trainerId ?? null, input.name, input.weekday, input.startTime, input.endTime, input.capacity);
     return q().get('SELECT * FROM classes WHERE id = ?', id);
+  },
+  // چند روز در یک مرحله: برای هر روز یک ردیف کلاس ساخته می‌شود (اسکیما بدون تغییر می‌ماند)
+  createMany(input: { name: string; trainerId?: string | null; weekdays: number[]; startTime: string; endTime: string; capacity: number }) {
+    const days = [...new Set(input.weekdays.map(Number).filter((d) => d >= 0 && d <= 6))];
+    if (days.length === 0) throw new Error('حداقل یک روز هفته را انتخاب کنید');
+    const created: unknown[] = [];
+    q().write({ entity: 'class', entityId: uuidv7(), op: 'create', version: 1, payload: { name: input.name, days } }, () => {
+      for (const weekday of days) {
+        const id = uuidv7();
+        q().run(
+          'INSERT INTO classes (id, branch_id, trainer_id, name, weekday, start_time, end_time, capacity) VALUES (?,?,?,?,?,?,?,?)',
+          id,
+          q().branchId,
+          input.trainerId ?? null,
+          input.name,
+          weekday,
+          input.startTime,
+          input.endTime,
+          input.capacity,
+        );
+        created.push(q().get('SELECT * FROM classes WHERE id = ?', id));
+      }
+    });
+    return created;
+  },
+  update(id: string, input: { name?: string; trainerId?: string | null; weekday?: number; startTime?: string; endTime?: string; capacity?: number }) {
+    const row = q().get<Record<string, unknown>>('SELECT * FROM classes WHERE id = ? AND deleted_at IS NULL', id);
+    if (!row) throw new Error('کلاس یافت نشد');
+    const enrolled = num(q().get<{ c: number }>("SELECT COUNT(*) AS c FROM class_enrollments WHERE class_id = ? AND status = 'active'", id)?.c);
+    const capacity = input.capacity ?? num(row.capacity);
+    if (capacity < enrolled) throw new Error(`ظرفیت نمی‌تواند کمتر از تعداد ثبت‌نام‌شده (${enrolled}) باشد`);
+    q().write({ entity: 'class', entityId: id, op: 'update', version: 1, payload: input }, () => {
+      q().run(
+        'UPDATE classes SET name = ?, trainer_id = ?, weekday = ?, start_time = ?, end_time = ?, capacity = ?, updated_at = ?, version = version + 1 WHERE id = ?',
+        String(input.name ?? row.name),
+        input.trainerId !== undefined ? input.trainerId : (row.trainer_id as string | null),
+        input.weekday !== undefined ? Number(input.weekday) : num(row.weekday),
+        String(input.startTime ?? row.start_time),
+        String(input.endTime ?? row.end_time),
+        capacity,
+        nowIso(),
+        id,
+      );
+    });
+    return q().get('SELECT * FROM classes WHERE id = ?', id);
+  },
+  remove(id: string) {
+    const row = q().get<{ id: string }>('SELECT id FROM classes WHERE id = ? AND deleted_at IS NULL', id);
+    if (!row) throw new Error('کلاس یافت نشد');
+    q().write({ entity: 'class', entityId: id, op: 'delete', version: 1, payload: { id } }, () => {
+      q().run("UPDATE class_enrollments SET status = 'cancelled', updated_at = ? WHERE class_id = ? AND status = 'active'", nowIso(), id);
+      q().run('UPDATE classes SET deleted_at = ?, updated_at = ? WHERE id = ?', nowIso(), nowIso(), id);
+    });
+    return { ok: true };
   },
   enroll(classId: string, memberId: string) {
     const cls = q().get<{ capacity: number }>('SELECT capacity FROM classes WHERE id = ?', classId);
@@ -1077,6 +1173,32 @@ export const trainers = {
     const id = uuidv7();
     q().run('INSERT INTO trainers (id, branch_id, full_name, mobile, specialty, commission_rate_bp) VALUES (?,?,?,?,?,?)', id, q().branchId, input.fullName, input.mobile ?? null, input.specialty ?? null, input.commissionRateBp ?? 0);
     return q().get('SELECT * FROM trainers WHERE id = ?', id);
+  },
+  update(id: string, input: { fullName?: string; mobile?: string | null; specialty?: string | null; commissionRateBp?: number }) {
+    const row = q().get<Record<string, unknown>>('SELECT * FROM trainers WHERE id = ? AND deleted_at IS NULL', id);
+    if (!row) throw new Error('مربی یافت نشد');
+    q().write({ entity: 'trainer', entityId: id, op: 'update', version: 1, payload: input }, () => {
+      q().run(
+        'UPDATE trainers SET full_name = ?, mobile = ?, specialty = ?, commission_rate_bp = ?, updated_at = ?, version = version + 1 WHERE id = ?',
+        String(input.fullName ?? row.full_name),
+        input.mobile !== undefined ? input.mobile : (row.mobile as string | null),
+        input.specialty !== undefined ? input.specialty : (row.specialty as string | null),
+        input.commissionRateBp !== undefined ? Number(input.commissionRateBp) : num(row.commission_rate_bp),
+        nowIso(),
+        id,
+      );
+    });
+    return q().get('SELECT * FROM trainers WHERE id = ?', id);
+  },
+  remove(id: string) {
+    const row = q().get<{ id: string }>('SELECT id FROM trainers WHERE id = ? AND deleted_at IS NULL', id);
+    if (!row) throw new Error('مربی یافت نشد');
+    q().write({ entity: 'trainer', entityId: id, op: 'delete', version: 1, payload: { id } }, () => {
+      // کلاس‌های این مربی بدون مربی می‌مانند (حذف نمی‌شوند)
+      q().run('UPDATE classes SET trainer_id = NULL, updated_at = ? WHERE trainer_id = ? AND deleted_at IS NULL', nowIso(), id);
+      q().run('UPDATE trainers SET deleted_at = ?, updated_at = ? WHERE id = ?', nowIso(), nowIso(), id);
+    });
+    return { ok: true };
   },
 };
 
