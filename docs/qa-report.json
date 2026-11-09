@@ -4,7 +4,7 @@
     "issues": [],
     "counts": {
       "interactive": 19,
-      "textNodes": 42
+      "textNodes": 57
     }
   },
   "members": {
@@ -12,7 +12,7 @@
     "issues": [],
     "counts": {
       "interactive": 23,
-      "textNodes": 27
+      "textNodes": 41
     }
   },
   "contracts": {
@@ -20,7 +20,7 @@
     "issues": [],
     "counts": {
       "interactive": 23,
-      "textNodes": 25
+      "textNodes": 40
     }
   },
   "finance": {
@@ -28,7 +28,7 @@
     "issues": [],
     "counts": {
       "interactive": 20,
-      "textNodes": 12
+      "textNodes": 27
     }
   },
   "attendance": {
@@ -36,7 +36,7 @@
     "issues": [],
     "counts": {
       "interactive": 21,
-      "textNodes": 23
+      "textNodes": 38
     }
   },
   "kiosk": {
@@ -44,7 +44,7 @@
     "issues": [],
     "counts": {
       "interactive": 19,
-      "textNodes": 18
+      "textNodes": 33
     }
   },
   "pos": {
@@ -52,7 +52,7 @@
     "issues": [],
     "counts": {
       "interactive": 22,
-      "textNodes": 20
+      "textNodes": 35
     }
   },
   "classes": {
@@ -60,15 +60,15 @@
     "issues": [],
     "counts": {
       "interactive": 24,
-      "textNodes": 39
+      "textNodes": 54
     }
   },
   "lockers": {
     "url": "#/lockers",
     "issues": [],
     "counts": {
-      "interactive": 17,
-      "textNodes": 8
+      "interactive": 29,
+      "textNodes": 52
     }
   },
   "reports": {
@@ -76,7 +76,7 @@
     "issues": [],
     "counts": {
       "interactive": 18,
-      "textNodes": 47
+      "textNodes": 62
     }
   },
   "support": {
@@ -84,7 +84,7 @@
     "issues": [],
     "counts": {
       "interactive": 18,
-      "textNodes": 17
+      "textNodes": 32
     }
   },
   "license": {
@@ -92,7 +92,7 @@
     "issues": [],
     "counts": {
       "interactive": 24,
-      "textNodes": 39
+      "textNodes": 54
     }
   },
   "settings": {
@@ -100,7 +100,7 @@
     "issues": [],
     "counts": {
       "interactive": 42,
-      "textNodes": 43
+      "textNodes": 58
     }
   },
   "help": {
@@ -108,7 +108,7 @@
     "issues": [],
     "counts": {
       "interactive": 35,
-      "textNodes": 57
+      "textNodes": 72
     }
   }
 }
