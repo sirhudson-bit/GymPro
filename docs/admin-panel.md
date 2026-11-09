@@ -103,7 +103,19 @@ pm2 save
 | دیپلوی مجدد | `sed 's/\r$//' deploy/setup-gym-admin.sh \| ssh root@194.56.148.100 'bash -s'` |
 
 **رمز پنل** در `/root/gym-admin.env` است؛ برای خواندن: `cat /root/gym-admin.env`.
-**تغییر رمز:** `ADMIN_PASSWORD` را در همان فایل عوض کنید **و `data/admin.json` را پاک کنید** — وگرنه رمز قدیمی (هش‌شده در admin.json) معتبر می‌ماند. بعد `pm2 restart gympro-admin`.
+**تغییر رمز** (هر سه مرحله لازم است، وگرنه رمز عوض نمی‌شود):
+
+```bash
+printf 'ADMIN_PASSWORD=%s\nPORT=8899\nBASE_URL=https://gym.academyr.ir\n' 'رمز-جدید' > /root/gym-admin.env
+chmod 600 /root/gym-admin.env
+rm -f /var/www/gym-admin/data/admin.json
+set -a; . /root/gym-admin.env; set +a
+pm2 restart gympro-admin --update-env
+```
+
+- `admin.json` هش رمز را نگه می‌دارد و بر متغیر محیطی اولویت دارد؛ بدون حذفش رمز قدیمی معتبر می‌ماند.
+- `pm2 restart` بدون `--update-env` متغیرهای قبلی را نگه می‌دارد.
+- از `sed` برای این فایل استفاده نکن؛ با رمزهای دارای `@` و `/` دستور خراب می‌شود. `printf`/`cat` بنویس.
 
 **TLS:** تا وقتی رکورد A دامنه به `195.28.169.23` (پارک) اشاره می‌کند certbot اجرا نمی‌شود. بعد از اصلاح DNS:
 
