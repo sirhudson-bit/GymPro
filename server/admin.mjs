@@ -113,6 +113,7 @@ const tickets = () => readJson(TICKETS_FILE, {});
 
 const EDITIONS = ['basic', 'pro', 'enterprise'];
 const EDITION_LABEL = { basic: 'پایه', pro: 'حرفه‌ای', enterprise: 'سازمانی' };
+const FEATURE_LABEL = { core: 'هستهٔ باشگاه', pos: 'بوفه', kiosk: 'کیوسک', reports: 'گزارش‌ها', support: 'پشتیبانی', sms: 'پیامک', multi_branch: 'چندشعبه' };
 const STATUS_LABEL = { open: 'باز', answered: 'پاسخ داده‌شده', closed: 'بسته' };
 
 function newKey(prefix = 'GP') {
@@ -314,8 +315,12 @@ function licenseDetailPage(session, key, flash) {
       <div><div class="muted">نسخه</div><div>${EDITION_LABEL[record.edition] ?? esc(record.edition)}</div></div>
       <div><div class="muted">خریدار</div><div>${esc(record.buyer ?? '—')}</div></div>
       <div><div class="muted">اشتراک آپدیت</div><div class="num">${fa(record.updateMonths ?? 12)} ماه</div></div>
-      <div><div class="muted">دستگاه مجاز</div><div class="num">${fa(record.maxActivations ?? 1)}</div></div>
+      <div><div class="muted">دستگاه‌های فعال</div><div class="num">${fa(devices.length)} از ${fa(record.maxActivations ?? 1)}</div></div>
       <div><div class="muted">وضعیت</div><div>${record.disabled ? '<span class="chip bad">غیرفعال</span>' : '<span class="chip ok">فعال</span>'}</div></div>
+    </div>
+    <div class="card">
+      <div class="muted">ویژگی‌های این نسخه (همان‌ها که برنامه показывает)</div>
+      <div style="margin-top:.35rem">${(record.features ?? ['core']).map((f) => `<span class="chip ok" style="margin-left:.35rem">${esc(FEATURE_LABEL[f] ?? f)}</span>`).join('')}</div>
     </div>
     <div class="card">
       <h1 style="font-size:1rem">دستگاه‌های فعال</h1>

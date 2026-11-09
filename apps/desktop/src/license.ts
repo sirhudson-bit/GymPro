@@ -147,6 +147,13 @@ export const license = {
       if (check.body?.machineId !== mid) {
         return { ...base, status: 'tampered', edition: 'trial', daysLeft: 0, trialDaysLeft: 0, updateEntitlementUntil: ent, updateDaysLeft: updateDays, memberCap: null, message: 'این لایسنس برای دستگاه دیگری صادر شده است.' };
       }
+      const payload = (() => {
+        try {
+          return JSON.parse(String(row.license_json ?? '{}')) as Record<string, unknown>;
+        } catch {
+          return {};
+        }
+      })();
       return {
         ...base,
         status: 'active',
@@ -156,6 +163,11 @@ export const license = {
         updateEntitlementUntil: ent,
         updateDaysLeft: updateDays,
         memberCap: null,
+        // same fields the licence panel shows, so both sides read identically
+        maxActivations: Number(payload.maxActivations ?? 1),
+        activationsUsed: Number(payload.activationsUsed ?? 1),
+        issuedAt: (payload.issuedAt as string) ?? null,
+        buyer: (payload.buyer as string) ?? null,
         message: updateDays > 0 ? `لایسنس فعال — ${updateDays} روز اشتراک آپدیت باقی است` : 'لایسنس دائمی فعال است؛ اشتراک آپدیت به پایان رسیده (برنامه کار می‌کند).',
       };
     }

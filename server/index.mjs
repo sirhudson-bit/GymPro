@@ -201,6 +201,6 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`GymPro backend on http://127.0.0.1:${PORT} — data: ${DATA}`);
+server.listen(PORT, process.env.HOST ?? '127.0.0.1', () => {
+  console.log(`GymPro backend on http://${process.env.HOST ?? '127.0.0.1'}:${PORT} — data: ${DATA}`);
 });

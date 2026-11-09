@@ -1,4 +1,4 @@
-import { ipcMain, shell, app } from 'electron';
+import { ipcMain, shell, app, dialog, BrowserWindow } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import QRCode from 'qrcode';
@@ -14,6 +14,10 @@ type Handler = (payload: any) => unknown;
 let currentUser: { id: string; username: string; fullName: string; role: string } | null = null;
 /** in-memory guard against recovery-code brute force: 5 tries / 10 minutes per username */
 const resetAttempts = new Map<string, { count: number; since: number }>();
+
+// سرور پیش‌فرض لایسنس (همان پنلی که کلیدها را می‌سازد). با settings[license.server] قابل تغییر است.
+const DEFAULT_LICENSE_SERVER = process.env.GYMPRO_LICENSE_SERVER ?? 'https://gym.academyr.ir';
+
 
 export const getSession = () => currentUser;
 
@@ -234,6 +238,31 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
     },
     'ui:qr': async (p) => ({ dataUrl: await QRCode.toDataURL(String(p.text ?? ''), { margin: 3, width: 360, errorCorrectionLevel: 'M' }) }),
 
+    // ذخیرهٔ خروجی تصویری (کارت عضویت، رسید) به‌جای چاپ کاغذی
+    'ui:saveImage': async (p) => {
+      const dataUrl = String(p?.dataUrl ?? '');
+      if (!dataUrl.startsWith('data:image/png;base64,')) throw new Error('تصویر نامعتبر است');
+      const safeName = String(p?.fileName ?? 'gympro.png').replace(/[\\/:*?"<>|]+/g, '-');
+      const buffer = Buffer.from(dataUrl.slice(dataUrl.indexOf(',') + 1), 'base64');
+      // حالت خودکار (بدون دیالوگ): مسیر داده‌شده، یا پوشهٔ data/cards کنار داده‌ها
+      const silent = process.env.GYMPRO_SILENT_SAVE === '1';
+      let filePath = silent ? String(p?.targetPath ?? path.join(deps.dataDir, 'cards', safeName)) : '';
+      if (!filePath) {
+        const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+        const res = await dialog.showSaveDialog(win, {
+          title: 'ذخیرهٔ تصویر',
+          defaultPath: path.join(app.getPath('pictures'), safeName),
+          filters: [{ name: 'تصویر PNG', extensions: ['png'] }],
+        });
+        if (res.canceled || !res.filePath) return { canceled: true };
+        filePath = res.filePath;
+      }
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, buffer);
+      log.info('image.saved', { file: path.basename(filePath), bytes: buffer.length });
+      return { canceled: false, path: filePath };
+    },
+
     'plans:list': (p) => plans.list(Boolean(p?.includeInactive)),
     'plans:create': (p) => {
       role('owner', 'manager');
@@ -449,6 +478,37 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
     'license:status': () => license.status(),
     'license:machineId': () => ({ machineId: license.status().machineId }),
     'license:activate': (p) => license.activate({ licenseJson: String(p.licenseJson ?? ''), signature: String(p.signature ?? '') }),
+    // فعال‌سازی با کلید، همان کلیدی که در پنل ساخته می‌شود (یک بار اینترنت لازم است)
+    'license:activateOnline': async (p) => {
+      const licenseKey = String(p?.licenseKey ?? '').trim().toUpperCase();
+      if (!licenseKey) throw new Error('کلید لایسنس را وارد کنید');
+      const serverUrl = String(p?.serverUrl ?? settings.get('license.server', DEFAULT_LICENSE_SERVER)).replace(/\/+$/, '');
+      const current = license.status();
+      let res: Response;
+      try {
+        res = await fetch(`${serverUrl}/v1/activate`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ licenseKey, machineId: current.machineId, appVersion: process.env.npm_package_version ?? '1.0.0' }),
+          signal: AbortSignal.timeout(15000),
+        });
+      } catch {
+        throw new Error('به سرور لایسنس وصل نشد. اتصال اینترنت را بررسی کنید یا از فعال‌سازی دستی (بدنه + امضا) استفاده کنید.');
+      }
+      const data = (await res.json().catch(() => ({}))) as { license?: Record<string, unknown>; signature?: string; error?: string; maxActivations?: number };
+      if (!res.ok) {
+        const map: Record<string, string> = {
+          'unknown licence key': 'این کلید در سرور پیدا نشد. کلید را با پنل بررسی کنید.',
+          'licence revoked': 'این لایسنس غیرفعال شده است. با پشتیبانی تماس بگیرید.',
+          'activation limit reached': `سقف دستگاه‌های مجاز این کلید پر شده است (${data.maxActivations ?? '?'} دستگاه). در پنل یک اسلات آزاد کنید.`,
+          'too many attempts': 'تلاش‌های زیاد از این شبکه. چند دقیقه بعد دوباره امتحان کنید.',
+        };
+        throw new Error(map[data.error ?? ''] ?? `فعال‌سازی ناموفق بود (${data.error ?? res.status})`);
+      }
+      if (!data.license || !data.signature) throw new Error('پاسخ سرور ناقص بود؛ دوباره تلاش کنید.');
+      settings.set('license.server', serverUrl);
+      return license.activate({ licenseJson: JSON.stringify(data.license), signature: data.signature });
+    },
     'license:deactivate': () => license.deactivate(),
 
     'settings:all': () => settings.all(),

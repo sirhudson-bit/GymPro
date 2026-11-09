@@ -99,6 +99,9 @@ export const api = {
   churn: () => call('reports:churn'),
   licenseStatus: () => call('license:status'),
   activateLicense: (p: unknown) => call('license:activate', p),
+  activateLicenseOnline: (p: unknown) => call('license:activateOnline', p),
+  saveImage: (p: unknown) => call('ui:saveImage', p),
+
   deactivateLicense: () => call('license:deactivate'),
   settingsAll: () => call('settings:all'),
   setSetting: (key: string, value: string) => call('settings:set', { key, value }),

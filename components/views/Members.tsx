@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Printer, CreditCard, UserRound, QrCode, Wallet, Pencil, Archive, RefreshCw } from 'lucide-react';
+import { Plus, Printer, CreditCard, UserRound, QrCode, Wallet, Pencil, Archive, RefreshCw, Download } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import { Badge, Button, Confirm, DateInput, Empty, Field, Modal, MoneyInput, SearchBox, Select, Table, TextArea, TextInput, Row, tomanToRial } from '@/components/ui';
@@ -17,6 +17,7 @@ export default function Members() {
   const [detail, setDetail] = useState<any>(null);
   const [editing, setEditing] = useState<any>(null);
   const [card, setCard] = useState<any>(null);
+  const [clubName, setClubName] = useState('');
   const [topup, setTopup] = useState<{ member: any; amount: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -24,6 +25,8 @@ export default function Members() {
     try {
       const res = await api.members({ q, status, limit: 100 });
       setRows(res as any[]);
+      const allSettings: any = await api.settingsAll().catch(() => ({}));
+      setClubName(String(allSettings?.['club.name'] ?? ''));
     } catch (e: any) {
       toast(e.message, 'bad');
     } finally {
@@ -57,6 +60,67 @@ export default function Members() {
       const res: any = await api.issueCard(memberId);
       const qr = await api.qr(res.token);
       setCard({ ...res, qr: qr.dataUrl });
+    } catch (e: any) {
+      toast(e.message, 'bad');
+    }
+  }
+
+  // خروجی تصویری کارت (PNG) — برای ارسال در واتساپ/تلگرام یا چاپ در چاپخانه
+  async function saveCardImage() {
+    if (!card) return;
+    try {
+      const img = new Image();
+      img.src = card.qr;
+      await img.decode();
+      const club = clubName || 'کارت عضویت باشگاه';
+      const W = 820;
+      const H = 1180;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const c = canvas.getContext('2d');
+      if (!c) throw new Error('ساخت تصویر ممکن نشد');
+      const font = (weight: string, size: number) => `${weight} ${size}px Vazirmatn, Tahoma, sans-serif`;
+      c.fillStyle = '#ffffff';
+      c.fillRect(0, 0, W, H);
+      c.fillStyle = '#0d6e57';
+      c.fillRect(0, 0, W, 108);
+      c.textAlign = 'center';
+      c.direction = 'rtl';
+      c.fillStyle = '#ffffff';
+      c.font = font('bold', 40);
+      // نام باشگاه از تنظیمات؛ اگر بلند بود کوچک‌تر نوشته می‌شود تا از کادر بیرون نزند
+      let headerSize = 40;
+      c.font = font('bold', headerSize);
+      while (c.measureText(club).width > W - 100 && headerSize > 18) {
+        headerSize -= 2;
+        c.font = font('bold', headerSize);
+      }
+      c.fillText(club, W / 2, 68);
+      const qs = 560;
+      c.drawImage(img, (W - qs) / 2, 168, qs, qs);
+      c.fillStyle = '#0f1620';
+      c.font = font('bold', 46);
+      c.fillText(card.memberName ?? '', W / 2, 796);
+      c.font = font('bold', 32);
+      c.fillText(`شمارهٔ عضویت: ${toPersianDigits(card.memberNo ?? '')}`, W / 2, 856);
+      c.fillStyle = '#55606d';
+      c.font = font('normal', 24);
+      c.fillText(`شناسهٔ کارت: ${card.barcode}`, W / 2, 906);
+      c.strokeStyle = '#d8dee6';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(90, 950);
+      c.lineTo(W - 90, 950);
+      c.stroke();
+      c.fillStyle = '#55606d';
+      c.font = font('normal', 23);
+      c.fillText('این کارت را در ورودی باشگاه اسکن کنید', W / 2, 1000);
+      c.fillText('در صورت گم‌شدن، کارت جدید صادر کنید تا این کارت باطل شود', W / 2, 1040);
+      const dataUrl = canvas.toDataURL('image/png');
+      const res: any = await api.saveImage({ dataUrl, fileName: `GymPro-card-${card.barcode}.png` });
+      if (res?.canceled) return;
+      toast(`تصویر کارت ذخیره شد: ${res.path}`);
     } catch (e: any) {
       toast(e.message, 'bad');
     }
@@ -222,7 +286,8 @@ export default function Members() {
       <Modal open={Boolean(card)} onClose={() => setCard(null)} title="کارت عضویت" footer={
         <>
           <Button variant="ghost" onClick={() => setCard(null)}>بستن</Button>
-          <Button onClick={() => window.print()} icon={<Printer size={14} />}>چاپ</Button>
+          <Button variant="ghost" onClick={() => window.print()} icon={<Printer size={14} />}>چاپ</Button>
+          <Button onClick={saveCardImage} icon={<Download size={14} />}>ذخیرهٔ تصویر</Button>
         </>
       }>
         {card ? (
