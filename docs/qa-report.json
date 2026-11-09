@@ -1,0 +1,114 @@
+{
+  "dashboard": {
+    "url": "#/dashboard",
+    "issues": [],
+    "counts": {
+      "interactive": 19,
+      "textNodes": 44
+    }
+  },
+  "members": {
+    "url": "#/members",
+    "issues": [],
+    "counts": {
+      "interactive": 28,
+      "textNodes": 50
+    }
+  },
+  "contracts": {
+    "url": "#/contracts",
+    "issues": [],
+    "counts": {
+      "interactive": 25,
+      "textNodes": 35
+    }
+  },
+  "finance": {
+    "url": "#/finance",
+    "issues": [],
+    "counts": {
+      "interactive": 20,
+      "textNodes": 26
+    }
+  },
+  "attendance": {
+    "url": "#/attendance",
+    "issues": [],
+    "counts": {
+      "interactive": 22,
+      "textNodes": 26
+    }
+  },
+  "kiosk": {
+    "url": "#/kiosk",
+    "issues": [],
+    "counts": {
+      "interactive": 18,
+      "textNodes": 12
+    }
+  },
+  "pos": {
+    "url": "#/pos",
+    "issues": [],
+    "counts": {
+      "interactive": 24,
+      "textNodes": 22
+    }
+  },
+  "classes": {
+    "url": "#/classes",
+    "issues": [],
+    "counts": {
+      "interactive": 19,
+      "textNodes": 32
+    }
+  },
+  "lockers": {
+    "url": "#/lockers",
+    "issues": [],
+    "counts": {
+      "interactive": 19,
+      "textNodes": 11
+    }
+  },
+  "reports": {
+    "url": "#/reports",
+    "issues": [],
+    "counts": {
+      "interactive": 18,
+      "textNodes": 49
+    }
+  },
+  "support": {
+    "url": "#/support",
+    "issues": [],
+    "counts": {
+      "interactive": 19,
+      "textNodes": 21
+    }
+  },
+  "license": {
+    "url": "#/license",
+    "issues": [],
+    "counts": {
+      "interactive": 23,
+      "textNodes": 22
+    }
+  },
+  "settings": {
+    "url": "#/settings",
+    "issues": [],
+    "counts": {
+      "interactive": 43,
+      "textNodes": 44
+    }
+  },
+  "help": {
+    "url": "#/help",
+    "issues": [],
+    "counts": {
+      "interactive": 35,
+      "textNodes": 56
+    }
+  }
+}

@@ -1,0 +1,25 @@
+node_modules
+out
+.next
+apps/desktop/dist
+dist
+.dev-data
+*.log
+.DS_Store
+
+.qa
+.qa-old
+
+# ─── هرگز کامیت نشود ───
+# کلید خصوصی امضای لایسنس
+server/keys/
+# کلیدها، تیکت‌ها، مانیفست آپدیت و دادهٔ پنل
+server/data/
+server/releases/
+*.pem
+*.b64
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+.session

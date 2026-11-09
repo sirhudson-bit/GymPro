@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: #f5f6f8;
+  --panel: #ffffff;
+  --edge: #d8dee6;
+  --edge-strong: #77828f;
+  --ink: #0f1620;
+  --muted: #55606d;
+  --brand: #0d6e57;
+  --brand-ink: #ffffff;
+  --ok: #0d6b3d;
+  --warn: #8a4b00;
+  --bad: #a11d18;
+  --ring: #0d6e57;
+  --shadow: 0 1px 2px rgba(15, 22, 32, 0.06), 0 8px 24px -12px rgba(15, 22, 32, 0.18);
+}
+
+[data-theme='dark'] {
+  --canvas: #0a111c;
+  --panel: #121b29;
+  --edge: #26313f;
+  --edge-strong: #6d7d90;
+  --ink: #eef3f9;
+  --muted: #a9b6c6;
+  --brand: #2bb894;
+  --brand-ink: #04120d;
+  --ok: #4ed08c;
+  --warn: #e9b263;
+  --bad: #ff8a80;
+  --ring: #2bb894;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -16px rgba(0, 0, 0, 0.7);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: Vazirmatn, Tahoma, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 28%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--edge);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  /* Tinted surface mode — the accent really repaints the chrome, not just buttons */
+  .surface-tint {
+    background: var(--panel);
+  }
+  [data-tint='on'] .surface-tint {
+    background: var(--brand-wash);
+    border-color: var(--brand-line);
+  }
+  [data-tint='on'] .card.surface-tint {
+    background: var(--panel);
+    border-color: var(--brand-line);
+  }
+  .field {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--edge-strong);
+    border-radius: 10px;
+    padding: 0.55rem 0.75rem;
+    color: var(--ink);
+    transition: border-color 120ms ease;
+  }
+  .field:hover {
+    border-color: color-mix(in srgb, var(--edge) 60%, var(--ink));
+  }
+  .field:focus {
+    border-color: var(--brand);
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    padding: 0.5rem 0.9rem;
+    min-height: 32px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 80ms ease, background 120ms ease, opacity 120ms ease;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--edge-strong);
+    color: var(--ink);
+  }
+  .btn-ghost:hover {
+    background: color-mix(in srgb, var(--edge) 35%, transparent);
+  }
+  .btn-danger {
+    background: var(--bad);
+    color: #fff;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--edge);
+  }
+  .th {
+    text-align: right;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--muted);
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--edge);
+    background: color-mix(in srgb, var(--edge) 30%, transparent);
+    white-space: nowrap;
+  }
+  .td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--edge) 85%, transparent);
+    vertical-align: middle;
+    text-align: start;
+  }
+  .label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  /* وقتی کارت عضویت چاپ می‌شود، فقط همان کارت روی کاغذ بیاید */
+  body:has(.print-card) * {
+    visibility: hidden;
+  }
+  body:has(.print-card) .print-card,
+  body:has(.print-card) .print-card * {
+    visibility: visible;
+  }
+  body:has(.print-card) .print-card {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100mm;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 6mm;
+  }
+  .print-card .no-print {
+    display: none !important;
+  }
+}

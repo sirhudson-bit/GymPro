@@ -1,0 +1,34 @@
+appId: ir.gympro.desktop
+productName: GymPro
+copyright: Copyright © 2026 GymPro
+asar: true
+compression: normal
+electronLanguages:
+  - en-US
+  - fa
+directories:
+  output: dist
+  buildResources: build
+files:
+  - apps/desktop/dist/**/*
+  - out/**/*
+  - packages/db/migrations/**/*
+  - legal/**/*
+  - THIRD-PARTY-NOTICES.txt
+  - build/icon.png
+  - package.json
+extraMetadata:
+  main: apps/desktop/dist/main.cjs
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  icon: build/icon.png
+  executableName: GymPro
+  requestedExecutionLevel: asInvoker
+  legalTrademarks: GymPro
+portable:
+  artifactName: GymPro-Portable-${version}.exe
+  unpackDirName: GymPro
+  splashImage: null

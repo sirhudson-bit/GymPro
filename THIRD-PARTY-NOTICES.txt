@@ -1,0 +1,24 @@
+THIRD-PARTY NOTICES — GymPro
+============================
+
+این نرم‌افزار از اجزای متن‌باز زیر استفاده می‌کند. متن کامل مجوز هر بسته در
+node_modules/<package>/LICENSE موجود است و همراه توزیع ارائه می‌شود.
+
+Electron 44.9.3        MIT        https://github.com/electron/electron
+Next.js 15.1.6         MIT        https://github.com/vercel/next.js
+React 19 / react-dom   MIT        https://github.com/facebook/react
+Recharts 2.15          MIT        https://github.com/recharts/recharts
+lucide-react           ISC        https://github.com/lucide-icons/lucide
+zustand 5              MIT        https://github.com/pmndrs/zustand
+zod 3                  MIT        https://github.com/colinhacks/zod
+qrcode 1.5             MIT        https://github.com/soldair/node-qrcode
+electron-builder 26    MIT        https://github.com/electron-userland/electron-builder
+esbuild                MIT        https://github.com/evanw/esbuild
+tailwindcss 3          MIT        https://github.com/tailwindlabs/tailwindcss
+
+فونت وزیرمتن (Vazirmatn) — SIL Open Font License 1.1
+Copyright (c) 2015-2024 Saber Rastikerdar
+https://github.com/rastikerdar/vazirmatn
+
+الزامات OFL-1.1: نام فونت تغییر داده نشده است، فونت به‌تنهایی فروخته نمی‌شود و متن
+مجوز همراه توزیع ارائه می‌گردد. متن کامل مجوز در assets/OFL.txt قرار دارد.
