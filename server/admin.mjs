@@ -15,6 +15,9 @@ const TICKETS_FILE = path.join(DATA, 'tickets.json');
 const ADMIN_FILE = path.join(DATA, 'admin.json');
 const MANIFEST_FILE = path.join(DATA, 'manifest.signed.json');
 const PORT = Number(process.env.PORT ?? 8899);
+// پیش‌فرض فقط loopback: پنل باید پشت nginx با TLS بیاید، نه روی IP خام.
+const HOST = process.env.HOST ?? '127.0.0.1';
+
 const BASE_URL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}`;
 
 fs.mkdirSync(DATA, { recursive: true });
@@ -692,7 +695,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`GymPro admin on http://127.0.0.1:${PORT} — data: ${DATA}`);
+server.listen(PORT, HOST, () => {
+  console.log(`GymPro admin on http://${HOST}:${PORT} — data: ${DATA}`);
   if (admin.bootstrapped) console.log('  (رمز اولیه در خروجی بالا چاپ شد و فقط یک‌بار ساخته می‌شود)');
 });
