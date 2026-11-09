@@ -470,12 +470,38 @@ function requireSession(req, res) {
 
 function sameOriginPost(req) {
   const origin = req.headers.origin;
-  if (!origin) return true; // same-origin form posts omit Origin in some clients
-  try {
-    return new URL(origin).host === req.headers.host;
-  } catch {
+  if (origin === undefined) return true; // some clients omit Origin entirely
+  const fetchSite = req.headers['sec-fetch-site'];
+  // Opaque origin: sandboxed iframe, privacy extension, or an in-app browser/webview.
+  // No cross-site form can claim `Sec-Fetch-Site: same-origin`, so that header is the
+  // decision here; every authenticated POST still needs its session-bound CSRF token.
+  if (origin === 'null') {
+    const ok = fetchSite === undefined || fetchSite === 'same-origin' || fetchSite === 'none';
+    if (!ok) console.warn('[admin] POST rejected: Origin null with Sec-Fetch-Site', fetchSite);
+    return ok;
+  }
+  const bare = (value) => {
+    if (!value) return '';
+    try {
+      // host:port -> host, lowercase; tolerate proxies that add a port
+      return new URL(value.includes('://') ? value : `http://${value}`).hostname.toLowerCase();
+    } catch {
+      return '';
+    }
+  };
+  const originHost = bare(origin);
+  const candidates = new Set(
+    [req.headers.host, req.headers['x-forwarded-host'], BASE_URL]
+      .map(bare)
+      .filter(Boolean),
+  );
+  if (!originHost) {
+    console.warn('[admin] POST rejected: unparseable Origin', JSON.stringify(origin));
     return false;
   }
+  if (candidates.has(originHost)) return true;
+  console.warn('[admin] POST rejected: Origin', originHost, 'not in', [...candidates].join('|'), 'host=', req.headers.host);
+  return false;
 }
 
 const server = http.createServer(async (req, res) => {
