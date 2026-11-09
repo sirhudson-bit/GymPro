@@ -88,6 +88,29 @@ pm2 save
 
 روزانه `server/data/` و `server/keys/` را کپی کنید. از دست دادن `license-private.pem` یعنی نتوانستن امضای لایسنس جدید؛ از دست دادن `data/admin.json` یعنی بازنشانی رمز پنل (کلید امضای نشست هم عوض می‌شود).
 
+## استقرار روی سرور (همین سرور، اجراشده)
+
+| مورد | مقدار |
+|---|---|
+| دامنه | `gym.academyr.ir` |
+| سرور | `194.56.148.100` |
+| مسیر برنامه | `/var/www/gym-admin` |
+| داده/کلید | `/var/www/gym-admin/data` و `/var/www/gym-admin/keys` (پوشه ۷۰۰، کلیدها ۶۰۰) |
+| پورت داخلی | `8899` (فقط loopback، پشت nginx) |
+| pm2 | `gympro-admin` |
+| متغیرها | `/root/gym-admin.env` (رمز پنل داخلش، مود ۶۰۰) |
+| nginx | `/etc/nginx/sites-available/gym.academyr.ir` |
+| دیپلوی مجدد | `sed 's/\r$//' deploy/setup-gym-admin.sh \| ssh root@194.56.148.100 'bash -s'` |
+
+**رمز پنل** در `/root/gym-admin.env` است؛ برای خواندن: `cat /root/gym-admin.env`.
+**تغییر رمز:** `ADMIN_PASSWORD` را در همان فایل عوض کنید **و `data/admin.json` را پاک کنید** — وگرنه رمز قدیمی (هش‌شده در admin.json) معتبر می‌ماند. بعد `pm2 restart gympro-admin`.
+
+**TLS:** تا وقتی رکورد A دامنه به `195.28.169.23` (پارک) اشاره می‌کند certbot اجرا نمی‌شود. بعد از اصلاح DNS:
+
+```bash
+certbot --nginx -d gym.academyr.ir --redirect --non-interactive --agree-tos --register-unsafely-without-email
+```
+
 ## آزمون‌های اجراشده
 
 ```bash
@@ -96,3 +119,6 @@ node scripts/test-admin-publish.mjs   # انتشار مانیفست + بررسی
 ```
 
 نتیجه: همهٔ مسیرها سبز — ورود غلط ۴۰۱، CSRF جعلی ۴۰۰، بدون نشست ۳۰۳ به `/login`، امضا معتبر و دست‌کاری نسخه رد شد.
+
+روی سرور پس از استقرار: `/health` → ۲۰۰، `Host: gym.academyr.ir /login` → ۲۰۰ و صفحهٔ ورود، ورود صحیح ۳۰۳ و ورود غلط ۴۰۱، و کلید `GP-DEMO-0001` در فهرست لایسنس‌ها دیده شد.
+
