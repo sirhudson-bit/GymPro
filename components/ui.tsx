@@ -235,15 +235,15 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(6,10,16,0.55)' }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} className="card w-full my-8" style={{ maxWidth: wide ? 880 : 520 }}>
-        <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--edge)' }}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} className="card w-full my-8" style={{ maxWidth: wide ? 880 : 520, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="flex items-center justify-between px-5 py-3 shrink-0" style={{ borderBottom: '1px solid var(--edge)' }}>
           <h2 id={titleId} className="font-bold text-[15px]">{title}</h2>
           <IconButton label="بستن" onClick={onClose}>
             <X size={17} />
           </IconButton>
         </div>
-        <div className="p-5">{children}</div>
-        {footer ? <div className="px-5 py-3 flex gap-2 justify-end" style={{ borderTop: '1px solid var(--edge)' }}>{footer}</div> : null}
+        <div className="p-5 overflow-y-auto">{children}</div>
+        {footer ? <div className="px-5 py-3 flex flex-wrap gap-2 justify-end shrink-0" style={{ borderTop: '1px solid var(--edge)' }}>{footer}</div> : null}
       </div>
     </div>
   );
@@ -262,11 +262,11 @@ export function Confirm({ open, title, message, confirmLabel = 'تأیید', onC
 
 /* ─────────── Table ─────────── */
 
-export function Table({ head, children, empty, emptyHint = 'موردی برای نمایش نیست.' }: { head: string[]; children: React.ReactNode; empty?: boolean; emptyHint?: string }) {
+export function Table({ head, children, empty, emptyHint = 'موردی برای نمایش نیست.', minWidth = 760 }: { head: string[]; children: React.ReactNode; empty?: boolean; emptyHint?: string; minWidth?: number }) {
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-[13px]">
+      <div className="table-scroll">
+        <table className="w-full text-[13px]" style={{ minWidth }}>
           <thead>
             <tr>
               {head.map((h) => (

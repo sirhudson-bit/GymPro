@@ -207,6 +207,202 @@ input[type='number']::-webkit-inner-spin-button {
   }
 }
 
+/* ─────────────────────────── چیدمان واکنش‌گرا ─────────────────────────── */
+
+.app-sidebar {
+  width: 212px;
+}
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll > table {
+  min-width: 760px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* دکمهٔ آیکونی فشرده برای ستون عملیات جدول‌ها */
+.icon-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.icon-act:hover {
+  background: color-mix(in srgb, var(--edge) 50%, transparent);
+  border-color: var(--edge-strong);
+}
+.icon-act.danger {
+  color: var(--bad);
+}
+.icon-act:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+@media (max-width: 1180px) {
+  .app-sidebar {
+    width: 78px !important;
+  }
+  .app-sidebar .nav-label,
+  .app-sidebar .brand-text {
+    display: none;
+  }
+  .app-sidebar nav button {
+    justify-content: center;
+    padding-inline: 0;
+    gap: 0;
+  }
+  .app-sidebar .brand-wrap {
+    padding-block: 0.9rem;
+    text-align: center;
+  }
+  .app-sidebar .sidebar-foot button {
+    justify-content: center;
+  }
+  .app-sidebar .sidebar-foot .nav-label {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-sidebar {
+    width: 64px !important;
+  }
+  .app-header {
+    padding-inline: 0.65rem !important;
+  }
+  .app-content {
+    padding: 0.7rem !important;
+  }
+  .page-title {
+    font-size: 13px !important;
+  }
+}
+
+/* ─────────────────────────── نمای کمد ─────────────────────────── */
+
+.locker-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+}
+
+@media (max-width: 600px) {
+  .locker-grid {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 0.5rem;
+  }
+}
+
+.locker-door {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px 10px 5px 5px;
+  border: 1px solid var(--edge-strong);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--panel) 92%, #000 8%),
+    color-mix(in srgb, var(--panel) 78%, #000 22%)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.4rem 0.55rem;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 90ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.locker-door:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 6px 14px rgba(0, 0, 0, 0.14);
+}
+.locker-door:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.locker-door::before {
+  content: '';
+  position: absolute;
+  inset: 9% 16% auto 16%;
+  height: 30%;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--ink) 18%, transparent) 0 2px,
+    transparent 2px 7px
+  );
+  opacity: 0.45;
+  pointer-events: none;
+}
+.locker-handle {
+  position: absolute;
+  top: 52%;
+  inset-inline-end: 7px;
+  width: 6px;
+  height: 26px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #dfe4ea, #9aa3ad);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+.locker-door.free {
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--edge-strong));
+}
+.locker-door.rented {
+  border-color: color-mix(in srgb, var(--warn) 60%, var(--edge-strong));
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--warn) 14%, var(--panel)),
+    color-mix(in srgb, var(--warn) 6%, var(--panel))
+  );
+}
+.locker-door.broken {
+  border-color: color-mix(in srgb, var(--bad) 55%, var(--edge-strong));
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--bad) 9%, var(--panel)) 0 6px,
+    var(--panel) 6px 12px
+  );
+}
+.locker-code {
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  margin-top: auto;
+  z-index: 1;
+}
+.locker-holder {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  z-index: 1;
+}
+.locker-state {
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 1;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
 @media print {
   body {
     background: #fff;

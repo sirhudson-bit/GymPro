@@ -458,10 +458,10 @@ export default function App() {
 
   return (
     <div className="h-screen flex overflow-hidden">
-      <aside className="w-[212px] shrink-0 flex flex-col no-print surface-tint h-full" style={{ borderLeft: '1px solid var(--edge)' }}>
-        <div className="px-4 py-4">
-          <p className="font-bold text-[15px]">جیم‌پرو</p>
-          <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
+      <aside className="app-sidebar shrink-0 flex flex-col no-print surface-tint h-full" style={{ borderLeft: '1px solid var(--edge)' }}>
+        <div className="brand-wrap px-4 py-4">
+          <p className="font-bold text-[15px] brand-text">جیم‌پرو</p>
+          <p className="text-[11px] brand-text" style={{ color: 'var(--muted)' }}>
             {license ? (license.edition === 'trial' ? `آزمایشی — ${toPersianDigits(license.trialDaysLeft ?? 0)} روز` : 'لایسنس فعال') : ''}
           </p>
         </div>
@@ -475,14 +475,15 @@ export default function App() {
                 aria-current={active ? 'page' : undefined}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] mb-0.5 text-right"
                 style={{ background: active ? 'color-mix(in srgb, var(--brand) 14%, transparent)' : 'transparent', color: active ? 'var(--brand)' : 'var(--ink)', fontWeight: active ? 700 : 500 }}
+                title={n.label}
               >
-                <n.icon size={16} />
-                {n.label}
+                <n.icon size={16} className="shrink-0" />
+                <span className="nav-label">{n.label}</span>
               </button>
             );
           })}
         </nav>
-        <div className="p-2" style={{ borderTop: '1px solid var(--edge)' }}>
+        <div className="p-2 sidebar-foot" style={{ borderTop: '1px solid var(--edge)' }}>
           <button
             onClick={() => {
               api.logout();
@@ -490,16 +491,17 @@ export default function App() {
             }}
             className="w-full flex items-center gap-2 px-3 py-2 text-[12.5px] rounded-lg"
             style={{ color: 'var(--bad)' }}
+            title="خروج"
           >
-            <LogOut size={15} /> خروج
+            <LogOut size={15} className="shrink-0" /> <span className="nav-label">خروج</span>
           </button>
         </div>
       </aside>
 
       <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
-        <header className="flex items-center justify-between px-5 py-3 no-print surface-tint shrink-0" style={{ borderBottom: '1px solid var(--edge)' }}>
-          <div className="flex items-center gap-3">
-            <h1 className="text-[15px] font-bold">{NAV.find((n) => n.key === view)?.label}</h1>
+        <header className="app-header flex items-center justify-between gap-2 px-5 py-3 no-print surface-tint shrink-0" style={{ borderBottom: '1px solid var(--edge)' }}>
+          <div className="flex items-center gap-3 min-w-0">
+            <h1 className="page-title text-[15px] font-bold truncate">{NAV.find((n) => n.key === view)?.label}</h1>
             {license?.status === 'trial' ? (
               <button onClick={() => setView('license')} className="chip" style={{ color: 'var(--warn)', borderColor: 'color-mix(in srgb, var(--warn) 40%, transparent)' }}>
                 آزمایشی: {toPersianDigits(license.trialDaysLeft ?? 0)} روز
@@ -522,7 +524,7 @@ export default function App() {
           </div>
         ) : null}
 
-        <div className="p-5 flex-1 min-h-0 overflow-y-auto">
+        <div className="app-content p-5 flex-1 min-h-0 overflow-y-auto">
           {view === 'dashboard' ? <Dashboard /> : null}
           {view === 'members' ? <Members /> : null}
           {view === 'contracts' ? <Contracts /> : null}

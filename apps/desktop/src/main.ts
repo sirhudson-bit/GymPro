@@ -149,8 +149,11 @@ function createWindow() {
 }
 
 function createTray() {
+  // آیکون سینی: لوگوی شفاف و فشرده (خوانا در ۱۶ پیکسل)، با بازگشت به آیکون اصلی
+  const trayPath = path.join(app.getAppPath(), 'build', 'tray.png');
   const iconPath = path.join(app.getAppPath(), 'build', 'icon.png');
-  let image = nativeImage.createFromPath(iconPath);
+  let image = nativeImage.createFromPath(trayPath);
+  if (image.isEmpty()) image = nativeImage.createFromPath(iconPath);
   if (image.isEmpty()) image = nativeImage.createEmpty();
   tray = new Tray(image.resize({ width: 16, height: 16 }));
   const menu = Menu.buildFromTemplate([

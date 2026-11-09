@@ -135,6 +135,10 @@ gympro/
 | کلاس چندروزه | `classes.createMany` برای هر روز یک ردیف می‌سازد؛ UI با ۷ دکمهٔ روز (aria-pressed) انتخاب چندگانه می‌دهد | CDP |
 | اسکنر لیزری یک‌بعدی | کارت حالا `Code128` (JsBarcode) هم دارد؛ اسکنر رشتهٔ `GP000001-XXX` را می‌فرستد و `cards.lookup` آن را می‌پذیرد | SVG در DOM + PNG خروجی |
 | کیوسک روی نمایشگر دوم | `kiosk:openWindow` پنجرهٔ دوم بدون سایدبار؛ `?kiosk=1` در App باعث رندر فقط کیوسک می‌شود | CDP روی تب دوم |
+| نمای واکنش‌گرا | کلاس‌های `app-sidebar`/`app-header`/`app-content` + سه بریک‌پوینت (۱۱۸۰/۹۰۰/۶۰۰)؛ همهٔ جدول‌ها از `Table` با `min-width` و اسکرول داخلی؛ مودال‌ها `max-height: 88vh` با بدنهٔ اسکرول‌شو و فوتر `flex-wrap` | `scripts/responsive-shot.mjs` |
+| ستون عملیات جدول‌ها | دکمه‌های آیکونی ۳۲px با `title` و `aria-label` به‌جای دکمه‌های متنی شلوغ (`.icon-act`) | اسکرین‌شات + audit |
+| نمای کمد | `locker-grid` + `locker-door` در CSS (درِ کمد با تهویه/دستگیره/برچسب و رنگ وضعیت)؛ برگهٔ عملیات روی هر در | اسکرین‌شات |
+| آیکون | `build/icon.ico` (۹ اندازه) + `build/icon.png` (۱۰۲۴) + `build/tray.png`؛ `win.icon` در electron-builder و آیکون سینی در main.ts | استخراج آیکون از exe |
 
 
 ## ۷) افزوده‌های کارفرما (از پیام جدا) و جای هرکدام در نقشه راه

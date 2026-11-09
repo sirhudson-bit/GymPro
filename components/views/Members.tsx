@@ -205,15 +205,15 @@ export default function Members() {
               <td className="td tabular-nums">{formatMoney(m.wallet)}</td>
               <td className="td">{m.status === 'active' ? <Badge tone="ok">فعال</Badge> : m.status === 'archived' ? <Badge>بایگانی</Badge> : <Badge tone="bad">مسدود</Badge>}</td>
               <td className="td">
-                <div className="flex gap-1">
-                  <button onClick={() => openDetail(m.id)} className="btn btn-ghost" style={{ borderColor: 'transparent', color: 'var(--brand)' }}>
-                    <UserRound size={13} /> پروفایل
+                <div className="flex items-center gap-1">
+                  <button onClick={() => openDetail(m.id)} className="icon-act" title="پروفایل" aria-label={`پروفایل ${m.full_name}`}>
+                    <UserRound size={15} />
                   </button>
-                  <button onClick={() => issueCard(m.id)} className="btn btn-ghost" style={{ borderColor: 'var(--edge-strong)' }} aria-label={`صدور کارت برای ${m.full_name}`}>
-                    <QrCode size={13} /> کارت
+                  <button onClick={() => issueCard(m.id)} className="icon-act" title="کارت عضویت" aria-label={`صدور کارت برای ${m.full_name}`}>
+                    <QrCode size={15} />
                   </button>
-                  <button onClick={() => setDrop(m)} className="btn btn-ghost" style={{ borderColor: 'transparent', color: 'var(--bad)' }} aria-label={`حذف ${m.full_name}`}>
-                    <Trash2 size={13} /> حذف
+                  <button onClick={() => setDrop(m)} className="icon-act danger" title="حذف عضو" aria-label={`حذف ${m.full_name}`}>
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </td>
