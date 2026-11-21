@@ -21,6 +21,15 @@ export async function call<T = unknown>(channel: string, payload?: unknown): Pro
   return res.data as T;
 }
 
+/* رویدادهای ارسالی از main (اعلان بروزرسانی، پانچ دستگاه اثر انگشت، سینک پشتیبانی) */
+export function onEvent(cb: (event: { type: string; payload: unknown }) => void) {
+  if (typeof window === 'undefined' || !window.api?.onEvent) return () => {};
+  window.api.onEvent(cb);
+  return () => {
+    /* preload پاک‌سازی رویداد را ارائه نمی‌دهد؛ شنونده تا پایان عمر صفحه می‌ماند */
+  };
+}
+
 export const api = {
   info: () => call('app:info'),
   bootstrap: () => call('app:bootstrap'),
@@ -131,6 +140,10 @@ export const api = {
   gitStatus: () => call('update:gitStatus'),
   gitPull: () => call('update:gitPull'),
   checkUpdate: (force = false) => call('update:check', { force }),
+  updateState: () => call('update:state'),
+  updateCheckNow: () => call('update:checkNow'),
+  updateRelease: () => call('update:release'),
+  updateDownloadRelease: (url: string, version: string) => call('update:downloadRelease', { url, version }),
   downloadUpdate: () => call('update:download'),
   installUpdate: (file: string) => call('update:install', { file }),
 

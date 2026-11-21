@@ -9,6 +9,7 @@ import { license } from './license';
 import { registerIpc } from './ipc';
 import { backupNow, dailyBackupIfNeeded } from './backup';
 import { startSupportPoller } from './support-sync';
+import { checkNow } from './updater';
 import { startAdmsListener, stopAdmsListener } from './adms';
 import { applyAdmsPunch, devices as bioDevicesRepo } from './biometric';
 import { settings } from './repo';
@@ -23,6 +24,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let mainWindow: BrowserWindow | null = null;
+let updateTimer: NodeJS.Timeout | null = null;
 let tray: Tray | null = null;
 let paths: DataPaths;
 let stopping = false;
@@ -286,6 +288,22 @@ if (!app.requestSingleInstanceLock()) {
 
     createWindow();
     createTray();
+
+    /* بررسی خودکار نسخه: ۲۰ ثانیه پس از باز شدن، سپس هر ۶ ساعت.
+       نتیجه از همین‌جا به رابط کاربری فرستاده می‌شود تا نوتیفیکیشن نشان داده شود. */
+    const runUpdateCheck = async () => {
+      if (settings.get('update.autoCheck', '1') !== '1') return;
+      const state = await checkNow({ quiet: true });
+      if (state.status === 'available' && state.latest) {
+        mainWindow?.webContents.send('app:event', {
+          type: 'update:available',
+          payload: { version: state.latest.version, notes: state.latest.notes, current: state.current, url: state.latest.url },
+        });
+      }
+      mainWindow?.webContents.send('app:event', { type: 'update:state', payload: state });
+    };
+    setTimeout(() => void runUpdateCheck(), 20_000);
+    updateTimer = setInterval(() => void runUpdateCheck(), 6 * 60 * 60 * 1000);
     startSupportPoller(paths.root, (payload) => {
       mainWindow?.webContents.send('app:event', { type: 'support:synced', payload });
     });
@@ -300,6 +318,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on('before-quit', () => {
+    if (updateTimer) clearInterval(updateTimer);
     stopping = true;
     stopAdmsListener();
     log.info('app.quit', { today: todayLocal() });

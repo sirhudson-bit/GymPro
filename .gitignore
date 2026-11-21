@@ -24,3 +24,4 @@ server/releases/
 *.db-shm
 *.sqlite
 .session
+tsconfig.tsbuildinfo

@@ -1,6 +1,6 @@
 import { ipcMain, shell, app, dialog, BrowserWindow } from 'electron';
 import { biometric, bioDevices, bioUserMap } from './biometric-bridge';
-import { gitStatus, gitPullAndBuild, checkForUpdate, downloadUpdate, installDownloaded } from './updater';
+import { gitStatus, gitPullAndBuild, checkForUpdate, downloadUpdate, installDownloaded, checkNow, readState, fetchGithubRelease, downloadGithubAsset } from './updater';
 import fs from 'node:fs';
 import path from 'node:path';
 import QRCode from 'qrcode';
@@ -579,6 +579,27 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
     'update:check': (p) => {
       role('owner');
       return checkForUpdate({ force: Boolean(p?.force) });
+    },
+
+    /* وضعیت یکپارچه (منبع گیت‌هاب یا سرور) — برای نوتیفیکیشن و صفحهٔ تنظیمات */
+    'update:state': () => readState(),
+    'update:checkNow': async () => {
+      role('owner');
+      return checkNow();
+    },
+    'update:release': async () => {
+      role('owner');
+      return fetchGithubRelease();
+    },
+    'update:downloadRelease': async (p) => {
+      role('owner');
+      const url = String(p.url ?? '');
+      const version = String(p.version ?? '');
+      // فقط دامنهٔ رسمی گیت‌هاب پذیرفته می‌شود تا آدرس دلخواه اجرا نشود
+      if (!/^https:\/\/(github\.com|objects\.githubusercontent\.com)\//.test(url)) {
+        throw new Error('آدرس دانلود معتبر نیست');
+      }
+      return downloadGithubAsset(deps.dataDir, url, version || 'new');
     },
     'update:download': async (p) => {
       role('owner');

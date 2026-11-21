@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, isValidElement, cloneElement, useContext, useEffect, useId, useRef, useState } from 'react';
+import React, { createContext, isValidElement, cloneElement, useContext, useEffect, useId, useRef, useState } from 'react';
 import { X, Search, ChevronDown, Check } from 'lucide-react';
 import { toPersianDigits, formatMoney, tomanToRial } from '@/lib/format';
 
@@ -32,10 +32,12 @@ export function Field({ label, hint, error, children, required }: { label: strin
 
 /* ─────────── Inputs ─────────── */
 
-export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
-  const { invalid, style, ...rest } = props;
-  return <input {...rest} className="field" style={{ borderColor: invalid ? 'var(--bad)' : undefined, ...style }} />;
-}
+// forwardRef لازم است: فوکوس خودکار فیلد اسکن (F4) روی همین input انجام می‌شود
+export const TextInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }>(
+  function TextInput({ invalid, style, ...rest }, ref) {
+    return <input {...rest} ref={ref} className="field" style={{ borderColor: invalid ? 'var(--bad)' : undefined, ...style }} />;
+  },
+);
 
 export function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
@@ -66,7 +68,7 @@ export function Select({ value, onChange, options, ariaLabel }: { value: string;
   );
 }
 
-export function TextArea({ value, onChange, rows = 3, placeholder, ...rest }: { value: string; onChange: (v: string) => void; rows?: number; placeholder?: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function TextArea({ value, onChange, rows = 3, placeholder, ...rest }: { value: string; onChange: (v: string) => void; rows?: number; placeholder?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
   return (
     <textarea
       {...rest}

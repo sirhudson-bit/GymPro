@@ -4,9 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   LayoutDashboard, Users, FileSignature, Wallet, ScanLine, MonitorSmartphone, ShoppingBasket,
   CalendarClock, KeyRound, BarChart3, LifeBuoy, Settings as SettingsIcon, ShieldCheck, BookOpen,
-  Sun, Moon, LogOut, CheckCircle2, AlertTriangle, XCircle, ArrowLeft, ArrowRight, X,
+  Sun, Moon, LogOut, CheckCircle2, AlertTriangle, XCircle, ArrowLeft, ArrowRight, X, DownloadCloud,
 } from 'lucide-react';
-import { api, hasApi } from '@/lib/api';
+import { api, hasApi, onEvent } from '@/lib/api';
 import { useStore, initTheme, type ViewKey } from '@/lib/store';
 import { Button, Field, TextInput, Spinner } from '@/components/ui';
 import { toPersianDigits } from '@/lib/format';
@@ -311,6 +311,12 @@ export default function App() {
   const [needsSetup, setNeedsSetup] = useState(false);
   const [tour, setTour] = useState(false);
   const [portableWarning, setPortableWarning] = useState(false);
+  /* نوتیفیکیشن بروزرسانی: از main می‌آید (update:available) */
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; notes: string[]; current: string; url?: string } | null>(null);
+  const [appVersion, setAppVersion] = useState('');
+  const [dismissedVersion, setDismissedVersion] = useState('');
+  /* نتیجهٔ بررسی نسخه که صفحهٔ تنظیمات می‌خواند */
+  const [updateState, setUpdateState] = useState<any>(null);
   const scanBuffer = useRef({ text: '', last: 0 });
 
   useEffect(() => {
@@ -350,6 +356,45 @@ export default function App() {
       }
     })();
   }, [setLicense]);
+
+  /* نسخهٔ برنامه و وضعیت بروزرسانی: یک بار در شروع، سپس با رویدادهای main */
+  useEffect(() => {
+    if (!hasApi()) return;
+    const applyState = (st: any) => {
+      if (!st) return;
+      setUpdateState(st);
+      /* وضعیت 'available' ذخیره‌شده هم باید نوار را نشان دهد، نه فقط رویداد لحظه‌ای */
+      if (st.status === 'available' && st.latest?.version) {
+        setUpdateInfo({ version: st.latest.version, notes: st.latest.notes ?? [], current: st.current, url: st.latest.url });
+      } else if (st.status === 'uptodate') {
+        setUpdateInfo(null);
+      }
+    };
+    api.updateState?.().then(applyState).catch(() => {});
+    const onLocal = (e: Event) => {
+      /* نتیجهٔ بررسی دستی در تنظیمات: هم نوار را باز می‌کند، هم می‌بندد */
+      const detail = (e as CustomEvent).detail;
+      applyState(detail);
+    };
+    window.addEventListener('gp:update-state', onLocal);
+    const unsub = onEvent((event) => {
+      if (event.type === 'update:available') {
+        const p = event.payload as { version: string; notes: string[]; current: string; url?: string };
+        setUpdateInfo(p);
+      }
+      if (event.type === 'update:state') applyState(event.payload);
+    });
+    return () => {
+      unsub();
+      window.removeEventListener('gp:update-state', onLocal);
+    };
+  }, []);
+
+  /* نسخه از main می‌آید تا با فایل نصبی یکی باشد */
+  useEffect(() => {
+    if (!hasApi()) return;
+    (api as any).info?.().then((v: any) => setAppVersion(v?.version ?? '')).catch(() => {});
+  }, []);
 
   // hash routing
   useEffect(() => {
@@ -513,11 +558,36 @@ export default function App() {
             <button className="btn btn-ghost px-2" onClick={toggleTheme} aria-label={theme === 'light' ? 'حالت تاریک' : 'حالت روشن'}>
               {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
             </button>
+            <button
+              className="chip"
+              onClick={() => setView('settings')}
+              title={updateState?.status === 'available' ? `نسخهٔ ${updateState.latest?.version} آمادهٔ نصب` : 'نسخهٔ برنامه'}
+              style={updateInfo ? { color: 'var(--brand)', borderColor: 'var(--brand-line)' } : undefined}
+            >
+              {updateInfo ? <DownloadCloud size={12} /> : null}
+              <span dir="ltr">{appVersion ? `v${appVersion}` : ''}</span>
+            </button>
             <div className="text-[12px] pr-2" style={{ color: 'var(--muted)' }}>
               {user.fullName} · {user.role === 'owner' ? 'مالک' : user.role === 'manager' ? 'مدیر' : user.role === 'receptionist' ? 'منشی' : 'مربی'}
             </div>
           </div>
         </header>
+
+        {updateInfo && dismissedVersion !== updateInfo.version ? (
+          <div className="px-5 py-2 flex items-center gap-2 text-[12.5px] no-print update-banner"
+            style={{ background: 'color-mix(in srgb, var(--brand) 12%, transparent)', borderBottom: '1px solid var(--brand-line)', color: 'var(--ink)' }}
+            role="status">
+            <DownloadCloud size={15} className="shrink-0" style={{ color: 'var(--brand)' }} />
+            <span className="min-w-0 truncate">
+              نسخهٔ جدید <b dir="ltr">{updateInfo.version}</b> منتشر شده است (شما <span dir="ltr">{updateInfo.current}</span> هستید).
+            </span>
+            <div className="flex-1" />
+            <Button variant="ghost" onClick={() => { setView('settings'); }}>مشاهده و به‌روزرسانی</Button>
+            <button className="btn btn-ghost px-2 py-1" onClick={() => setDismissedVersion(updateInfo.version)} aria-label="بستن اطلاعیهٔ بروزرسانی">
+              <X size={14} />
+            </button>
+          </div>
+        ) : null}
 
         {portableWarning ? (
           <div className="px-5 py-2 text-[12.5px]" style={{ background: 'color-mix(in srgb, var(--warn) 14%, transparent)', color: 'var(--warn)' }}>

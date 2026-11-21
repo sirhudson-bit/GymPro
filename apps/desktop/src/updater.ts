@@ -79,6 +79,251 @@ function run(cmd: string, args: string[], cwd: string, timeoutMs = 120_000): Pro
   });
 }
 
+/* ───────────────────────── مسیر گیت‌هاب (انتشار نسخه) ───────────────────────── */
+
+export type RepoRelease = {
+  version: string;
+  tag: string;
+  notes: string[];
+  url: string;      // آدرس فایل نصب (یا صفحهٔ انتشار اگر فایلی ضمیمه نشده)
+  assetName: string;
+  manual?: boolean; // فایل نصبی ضمیمه نشده؛ کاربر باید صفحهٔ انتشار را باز کند
+  publishedAt: string;
+  mandatory?: boolean;
+};
+
+function normalizeVersion(raw: string): string {
+  return raw.trim().replace(/^v/i, '').replace(/[^0-9.]/g, '') || '0.0.0';
+}
+
+/** آخرین نسخهٔ منتشرشده در GitHub Releases (مخزن خصوصی نیاز به توکن read-only دارد) */
+export async function fetchGithubRelease(opts: { owner?: string; repo?: string; token?: string } = {}): Promise<RepoRelease | null> {
+  const owner = opts.owner || settings.get('update.githubOwner', 'sirhudson-bit') || 'sirhudson-bit';
+  const repo = opts.repo || settings.get('update.githubRepo', 'GymPro') || 'GymPro';
+  const token = opts.token ?? settings.get('update.githubToken', '');
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
+    headers: {
+      accept: 'application/vnd.github+json',
+      'user-agent': 'GymPro-Updater',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (res.status === 404) {
+    throw new Error('هنوز هیچ نسخه‌ای در GitHub منتشر نشده است (Releases خالی است).');
+  }
+  if (res.status === 401 || res.status === 403) throw new Error('توکن گیت‌هاب پذیرفته نشد یا سقف درخواست پر شده است.');
+  if (!res.ok) throw new Error(`GitHub پاسخ داد: ${res.status}`);
+  const body = (await res.json()) as {
+    tag_name?: string;
+    name?: string;
+    body?: string;
+    html_url?: string;
+    published_at?: string;
+    assets?: Array<{ name: string; browser_download_url: string; size: number }>;
+  };
+  const tag = String(body.tag_name ?? '');
+  const installer = (body.assets ?? []).find((a) => /\.exe$/i.test(a.name));
+  if (!tag) return null;
+  return {
+    version: normalizeVersion(tag || body.name || ''),
+    tag,
+    notes: String(body.body ?? '')
+      .split(/\r?\n/)
+      .map((l) => l.replace(/^[-*]\s*/, '').trim())
+      .filter(Boolean)
+      .slice(0, 12),
+    url: installer?.browser_download_url ?? String(body.html_url ?? ''),
+    assetName: installer?.name ?? '',
+    manual: !installer,
+    publishedAt: String(body.published_at ?? ''),
+  };
+}
+
+/* ───────────────────────── وضعیت یکپارچه برای UI ───────────────────────── */
+
+export type UpdateState = {
+  current: string;
+  source: 'github' | 'server';
+  lastCheck: string | null;
+  status: 'idle' | 'checking' | 'uptodate' | 'available' | 'error';
+  latest?: { version: string; notes: string[]; url: string; publishedAt?: string; mandatory?: boolean; manual?: boolean };
+  downloaded?: { file: string; version: string; size: number } | null;
+  message: string;
+  serverUrl?: string;
+  autoCheck?: boolean;
+  repo?: { owner: string; repo: string; hasToken: boolean };
+};
+
+function remember(state: { status: UpdateState['status']; latest?: UpdateState['latest']; message: string }) {
+  try {
+    settings.set('update.lastStatus', state.status);
+    settings.set('update.lastMessage', state.message);
+    settings.set('update.lastCheck', nowIso());
+    settings.set('update.latestVersion', state.latest?.version ?? '');
+    settings.set('update.latestNotes', JSON.stringify(state.latest?.notes ?? []));
+    settings.set('update.latestUrl', state.latest?.url ?? '');
+    settings.set('update.latestManual', state.latest?.manual ? '1' : '');
+  } catch {
+    /* تنظیمات نباید بررسی نسخه را بشکند */
+  }
+}
+
+export function readState(): UpdateState {
+  const source = (settings.get('update.source', 'github') === 'server' ? 'server' : 'github') as 'github' | 'server';
+  return {
+    current: currentVersion(),
+    source,
+    lastCheck: settings.get('update.lastCheck', '') || null,
+    status: (settings.get('update.lastStatus', 'idle') || 'idle') as UpdateState['status'],
+    latest: settings.get('update.latestVersion', '')
+      ? {
+          version: settings.get('update.latestVersion', ''),
+          notes: (() => {
+            try {
+              return JSON.parse(settings.get('update.latestNotes', '[]')) as string[];
+            } catch {
+              return [];
+            }
+          })(),
+          url: settings.get('update.latestUrl', ''),
+          manual: settings.get('update.latestManual', '') === '1',
+        }
+      : undefined,
+    message: settings.get('update.lastMessage', ''),
+    downloaded: (() => {
+      const file = settings.get('update.downloadedFile', '');
+      if (!file || !fs.existsSync(file)) return null;
+      try {
+        return { file, version: settings.get('update.downloadedVersion', ''), size: fs.statSync(file).size };
+      } catch {
+        return null;
+      }
+    })(),
+    serverUrl: settings.get('update.url', ''),
+    autoCheck: settings.get('update.autoCheck', '1') === '1',
+    repo: {
+      owner: settings.get('update.githubOwner', 'sirhudson-bit'),
+      repo: settings.get('update.githubRepo', 'GymPro'),
+      hasToken: Boolean(settings.get('update.githubToken', '')),
+    },
+  };
+}
+
+/** بررسی نسخه از منبع انتخاب‌شده؛ همیشه وضعیت را ذخیره می‌کند و هیچ‌وقت throw نمی‌کند */
+export async function checkNow(opts: { quiet?: boolean } = {}): Promise<UpdateState> {
+  const base = readState();
+  const source = base.source;
+  try {
+    let latestVersion = '';
+    let notes: string[] = [];
+    let url = '';
+    let publishedAt = '';
+    let mandatory = false;
+    let manualAsset = false;
+
+    if (source === 'github') {
+      const rel = await fetchGithubRelease();
+      if (rel) {
+        latestVersion = rel.version;
+        notes = rel.notes;
+        url = rel.url;
+        publishedAt = rel.publishedAt;
+        manualAsset = Boolean(rel.manual);
+      }
+    } else {
+      const serverUrl = settings.get('update.url', '');
+      if (!serverUrl) throw new Error('آدرس سرور آپدیت در تنظیمات وارد نشده است');
+      const { manifest, signature } = await fetchManifest(serverUrl);
+      if (!verifyManifest(manifest, signature)) {
+        throw new Error('امضای مانیفست معتبر نیست');
+      }
+      latestVersion = normalizeVersion(manifest.version);
+      notes = manifest.notes ?? [];
+      url = manifest.url;
+      publishedAt = manifest.publishedAt ?? '';
+      mandatory = Boolean(manifest.mandatory);
+    }
+
+    const state: UpdateState = { ...base, lastCheck: nowIso(), status: 'idle', message: '' };
+    if (!latestVersion) {
+      state.status = 'error';
+      state.message = 'نسخه‌ای منتشر نشده است.';
+      remember(state);
+      return state;
+    }
+
+    const newer = compareVersions(latestVersion, base.current) > 0;
+    /* اگر فایل دانلودشده مربوط به نسخهٔ قدیمی‌تر باشد، دیگر «آمادهٔ نصب» نیست */
+    if (newer && base.downloaded && compareVersions(latestVersion, base.downloaded.version) > 0) {
+      try {
+        fs.rmSync(base.downloaded.file, { force: true });
+      } catch {
+        /* پاک نشد؛ مهم نیست */
+      }
+      settings.set('update.downloadedFile', '');
+      settings.set('update.downloadedVersion', '');
+      base.downloaded = null;
+    }
+    const fresh: UpdateState = newer
+      ? {
+          ...state,
+          status: 'available',
+          latest: { version: latestVersion, notes, url, publishedAt, mandatory, manual: manualAsset },
+          message: `نسخهٔ ${latestVersion} منتشر شده است.`,
+        }
+      : { ...state, status: 'uptodate', latest: undefined, message: 'نسخه شما به‌روز است.' };
+    remember(fresh);
+    if (!opts.quiet) log.info('update.check', { source, current: base.current, latest: latestVersion, newer });
+    return fresh;
+  } catch (e) {
+    const failed: UpdateState = {
+      ...base,
+      lastCheck: nowIso(),
+      status: 'error',
+      message: faUpdateError(e),
+    };
+    remember(failed);
+    if (!opts.quiet) log.warn('update.check.failed', { source, error: failed.message });
+    return failed;
+  }
+}
+
+function faUpdateError(e: unknown): string {
+  const msg = String((e as Error)?.message ?? e);
+  if (/ENOTFOUND|EAI_AGAIN|fetch failed|ETIMEDOUT|timeout/i.test(msg)) {
+    return 'به سرور به‌روزرسانی دسترسی نبود. اتصال اینترنت را بررسی کنید.';
+  }
+  return msg;
+}
+
+/** دانلود فایل نصب نسخهٔ گیت‌هاب (بدون مانیفست امضاشده، فقط https رسمی گیت‌هاب) */
+export async function downloadGithubAsset(dataDir: string, url: string, version: string, onProgress?: (pct: number) => void) {
+  const dir = path.join(dataDir, 'updates');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `GymPro-Setup-${version}.exe`);
+  const res = await fetch(url, { headers: { 'user-agent': 'GymPro-Updater' } });
+  if (!res.ok || !res.body) throw new Error(`دانلود ناموفق بود (${res.status})`);
+  const total = Number(res.headers.get('content-length') ?? 0);
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for await (const chunk of res.body) {
+    chunks.push(chunk as Uint8Array);
+    received += (chunk as Uint8Array).length;
+    if (total > 0 && onProgress) onProgress(Math.min(100, Math.round((received / total) * 100)));
+  }
+  const buf = Buffer.concat(chunks);
+  /* فقط نصب‌کننده باید بزرگ باشد؛ فایل‌های کوچک (blockmap) هم قابل دانلودند */
+  const isInstaller = /\.exe$/i.test(url);
+  if (!isInstaller && buf.length === 0) throw new Error('فایل دانلودشده خالی است؛ پاسخ سرور را بررسی کنید.');
+  if (isInstaller && buf.length < 1_000_000) throw new Error('فایل نصب دانلودشده کوچک‌تر از حد انتظار است؛ احتمالاً پاسخ خطا بوده.');
+  fs.writeFileSync(file, buf);
+  settings.set('update.downloadedFile', file);
+  settings.set('update.downloadedVersion', version);
+  log.info('update.downloaded', { version, bytes: buf.length });
+  return { file, size: buf.length };
+}
+
 /* ───────────────────────── مسیر گیت ───────────────────────── */
 
 /** پوشهٔ منبع گیت: یا تنظیمات، یا پوشهٔ برنامه (نصب از منبع) */

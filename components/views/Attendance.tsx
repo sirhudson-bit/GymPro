@@ -89,7 +89,6 @@ export default function Attendance() {
         <BioDevices />
       ) : (
       <>
-      {tab !== 'bio' ? (
       <div className="card p-4">
         <form onSubmit={submitScan} className="flex items-end gap-2">
           <div className="flex-1">
@@ -100,7 +99,6 @@ export default function Attendance() {
           <Button type="submit" icon={<ScanLine size={15} />}>ثبت ورود (F4)</Button>
         </form>
       </div>
-      ) : null}
 
       <Table head={['عضو', 'زمان ورود', 'زمان خروج', 'روش', '']} empty={rows.length === 0}>
         {rows.map((c) => (
