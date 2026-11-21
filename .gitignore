@@ -28,3 +28,12 @@ tsconfig.tsbuildinfo
 # installer staged for public download (large binary, created by scripts/stage-download.py)
 server/downloads/
 server/public/
+
+# scratch dirs (local testing)
+.lt/
+.hd/
+.hd2/
+.qa-lic/
+.landing-*/
+.seed-eval.txt
+.chk.jpg

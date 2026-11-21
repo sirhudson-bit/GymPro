@@ -20,6 +20,24 @@ const PUBLIC_DIR = fs.existsSync(path.join(__dirname, 'public', 'landing.html'))
   : path.join(__dirname, '..', 'landing');
 const DOWNLOAD_DIR = path.join(__dirname, 'downloads');
 const DOWNLOAD_TEXT = path.join(DOWNLOAD_DIR, 'info.json');
+const ADMIN_PATH_FILE = path.join(DATA, 'admin-path.json');
+const LANDING_EDIT_FILE = path.join(DATA, 'landing.json');
+
+/* مسیر اختصاصی پنل: فقط مالک آدرس را می‌داند؛ /login عمومی وجود ندارد */
+const ADMIN_SLUG = (() => {
+  try {
+    const rec = JSON.parse(fs.readFileSync(ADMIN_PATH_FILE, 'utf8'));
+    if (rec?.slug && /^[A-Za-z0-9]{8,40}$/.test(rec.slug)) return rec.slug;
+  } catch {
+    /* ساخته نشده */
+  }
+  const slug = crypto.randomBytes(12).toString('base64url').replace(/[-_]/g, '').slice(0, 20);
+  fs.writeFileSync(ADMIN_PATH_FILE, JSON.stringify({ slug, createdAt: new Date().toISOString() }, null, 2), { mode: 0o600 });
+  console.log(`[admin] لینک اختصاصی پنل: /${slug}/login`);
+  return slug;
+})();
+const ADMIN_BASE = `/${ADMIN_SLUG}`;
+
 const LANDING_FILE = (() => {
   for (const name of ['landing.html', 'index.html']) {
     const candidate = path.join(PUBLIC_DIR, name);
@@ -162,53 +180,185 @@ const fa = (n) => String(n ?? 0).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Nu
 
 function layout({ title, body, session, active, flash }) {
   const nav = [
-    ['/dashboard', 'داشبورد'],
-    ['/licenses', 'لایسنس‌ها'],
-    ['/tickets', 'تیکت‌ها'],
-    ['/updates', 'آپدیت‌ها'],
-    ['/help', 'راهنما'],
+    [`${ADMIN_BASE}/dashboard`, 'داشبورد'],
+    [`${ADMIN_BASE}/licenses`, 'لایسنس‌ها'],
+    [`${ADMIN_BASE}/tickets`, 'تیکت‌ها'],
+    [`${ADMIN_BASE}/updates`, 'آپدیت‌ها'],
+    [`${ADMIN_BASE}/landing`, 'لندینگ'],
+    [`${ADMIN_BASE}/help`, 'راهنما'],
   ];
   return `<!doctype html>
 <html lang="fa" dir="rtl"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} — پنل جیم‌پرو</title>
 <style>
-:root{--canvas:#f5f6f8;--panel:#fff;--edge:#d8dee6;--ink:#0f1620;--muted:#55606d;--brand:#0d6e57;--ok:#0d6b3d;--warn:#8a4b00;--bad:#a11d18}
+:root{
+  --pink:#ff0057;--violet:#a34eff;--sky:#53a5ff;
+  --void:#0a0c12;--panel:#11141c;--panel2:#161a24;--edge:rgba(255,255,255,.09);--edge2:rgba(255,255,255,.18);
+  --ink:#f5f7fc;--muted:#a3abbd;--faint:#717a8d;
+  --ok:#4ed08c;--warn:#e9b263;--bad:#ff8a8a;
+  --grad:linear-gradient(96deg,var(--pink),var(--violet) 52%,var(--sky));
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif;background:var(--canvas);color:var(--ink);font-size:14px;line-height:1.8}
-a{color:var(--brand);text-decoration:none}
-header{background:var(--panel);border-bottom:1px solid var(--edge);padding:.75rem 1.25rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
-nav a{padding:.35rem .7rem;border-radius:8px;color:var(--ink)}
-nav a.on{background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:700}
-main{max-width:1180px;margin:0 auto;padding:1.25rem}
-.card{background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:1rem;margin-bottom:1rem;box-shadow:0 1px 2px rgba(15,22,32,.05)}
-h1{font-size:1.15rem;margin:0 0 1rem}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:right;color:var(--muted);font-weight:700;padding:.55rem .6rem;border-bottom:1px solid var(--edge);background:color-mix(in srgb,var(--edge) 30%,transparent)}
-td{padding:.55rem .6rem;border-bottom:1px solid color-mix(in srgb,var(--edge) 80%,transparent);text-align:right}
+body{margin:0;font-family:Vazirmatn,'Segoe UI',Tahoma,sans-serif;background:var(--void);color:var(--ink);font-size:14px;line-height:1.8;-webkit-font-smoothing:antialiased}
+a{color:var(--sky);text-decoration:none}
+a:hover{color:#8cc2ff}
+header{background:rgba(10,12,18,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--edge);padding:.7rem 1.1rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:9}
+header strong{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:15px}
+nav a{padding:.32rem .65rem;border-radius:8px;color:var(--muted);font-size:13px}
+nav a:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+nav a.on{background:color-mix(in srgb,var(--pink) 16%,transparent);color:var(--ink);font-weight:700;border:1px solid color-mix(in srgb,var(--pink) 34%,transparent)}
+main{max-width:1140px;margin:0 auto;padding:1.1rem}
+.card{background:linear-gradient(170deg,var(--panel2),var(--panel));border:1px solid var(--edge);border-radius:14px;padding:1.05rem;margin-bottom:1rem}
+h1{font-size:1.05rem;margin:0 0 .9rem;font-weight:800}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:right;color:var(--faint);font-weight:700;padding:.5rem .55rem;border-bottom:1px solid var(--edge);white-space:nowrap}
+td{padding:.5rem .55rem;border-bottom:1px solid rgba(255,255,255,.05);text-align:right;vertical-align:middle}
 .num{font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
-label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin:.6rem 0 .25rem}
-input,select,textarea{width:100%;padding:.5rem .65rem;border:1px solid #7b8794;border-radius:9px;font:inherit;background:var(--panel);color:var(--ink)}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
-button{display:inline-flex;align-items:center;gap:.4rem;min-height:32px;padding:.45rem .9rem;border-radius:9px;border:1px solid transparent;background:var(--brand);color:#fff;font:inherit;font-weight:700;cursor:pointer}
-button.ghost{background:transparent;color:var(--ink);border-color:#7b8794}
-button.danger{background:var(--bad)}
-.chip{display:inline-block;padding:.05rem .5rem;border-radius:999px;font-size:12px;font-weight:700;border:1px solid currentColor}
+label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:.5rem 0 .22rem}
+input,select,textarea{width:100%;padding:.5rem .65rem;border:1px solid var(--edge2);border-radius:9px;font:inherit;background:rgba(8,10,15,.6);color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--violet);outline-offset:1px;border-color:transparent}
+button{display:inline-flex;align-items:center;gap:.4rem;min-height:32px;padding:.42rem .85rem;border-radius:9px;border:1px solid transparent;background:var(--grad);color:#fff;font:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:filter .15s,transform .1s}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(1px)}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--edge2)}
+button.ghost:hover{background:rgba(255,255,255,.05);filter:none}
+button.danger{background:var(--bad);color:#230505}
+.chip{display:inline-block;padding:.05rem .5rem;border-radius:99px;font-size:11.5px;font-weight:700;border:1px solid currentColor}
 .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-.grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.kpi{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.grid{display:grid;gap:.85rem;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.kpi{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.3;margin:.15rem 0}
 .muted{color:var(--muted);font-size:12.5px}
-code{background:color-mix(in srgb,var(--edge) 45%,transparent);padding:.1rem .35rem;border-radius:6px;font-size:12px}
-.flash{border-radius:10px;padding:.6rem .9rem;margin-bottom:1rem;font-size:13px}
-.flash.ok{background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)}
-.flash.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
-pre{background:#0f1620;color:#eef3f9;padding:.8rem;border-radius:10px;overflow:auto;direction:ltr;font-size:12px}
+code{background:rgba(255,255,255,.08);padding:.08rem .35rem;border-radius:6px;font-size:12px}
+.flash{border-radius:10px;padding:.55rem .85rem;margin-bottom:.9rem;font-size:12.5px;border:1px solid}
+.flash.ok{background:rgba(78,208,140,.1);color:var(--ok);border-color:rgba(78,208,140,.35)}
+.flash.bad{background:rgba(255,138,138,.1);color:var(--bad);border-color:rgba(255,138,138,.35)}
+pre{background:#070910;color:#dfe6f2;padding:.75rem;border-radius:10px;overflow:auto;direction:ltr;font-size:11.5px;border:1px solid var(--edge)}
+.login-wrap{max-width:370px;margin:10vh auto}
+.login-wrap .card{padding:1.5rem}
+.login-wrap h1{font-size:1.1rem}
+.badge{display:inline-flex;align-items:center;gap:.35rem;font-size:11.5px;font-weight:700;padding:.15rem .55rem;border-radius:99px;background:color-mix(in srgb,var(--violet) 18%,transparent);border:1px solid color-mix(in srgb,var(--violet) 36%,transparent);color:#d9bcff}
+/* فرم ویرایش: دو ستون ثابت تا برچسب و فیلد هم‌تراز بمانند */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem 1rem}
+.form-grid .fld{min-width:0}
+.form-grid .fld.wide{grid-column:1/-1}
+.form-grid label{margin:0 0 .22rem}
+.actions{position:sticky;bottom:0;display:flex;gap:.9rem;align-items:center;flex-wrap:wrap;margin-top:1.1rem;padding:.9rem 0;border-top:1px solid var(--edge);background:linear-gradient(180deg,rgba(17,20,28,.85),rgba(17,20,28,1))}
+.btn-link{font-size:13px;color:var(--muted)}
+.btn-link:hover{color:var(--ink)}
+@media(max-width:820px){nav a{padding:.3rem .5rem;font-size:12px}main{padding:.8rem}header{flex-wrap:wrap;gap:.5rem}.form-grid{grid-template-columns:1fr}}
 </style></head><body>
-${session ? `<header><div style="display:flex;gap:.5rem;align-items:center"><strong>جیم‌پرو</strong><nav>${nav.map(([href, label]) => `<a href="${href}" class="${active === href ? 'on' : ''}">${label}</a>`).join('')}</nav></div><form method="post" action="/logout" style="margin:0"><button class="ghost">خروج</button></form></header>` : ''}
+${session ? `<header><div style="display:flex;gap:.5rem;align-items:center"><strong>جیم‌پرو</strong><nav>${nav.map(([href, label]) => `<a href="${href}" class="${active === href ? 'on' : ''}">${label}</a>`).join('')}</nav></div><form method="post" action="${ADMIN_BASE}/logout" style="margin:0"><button class="ghost">خروج</button></form></header>` : ''}
 <main>
 ${flash ? `<div class="flash ${flash.tone}">${esc(flash.text)}</div>` : ''}
 ${body}
 </main></body></html>`;
+}
+
+/* ─────────── ویرایش لندینگ ─────────── */
+
+const LANDING_FIELDS = {
+  title: { label: 'عنوان صفحه (title)', max: 80 },
+  hero_line1: { label: 'خط اول عنوان', max: 60 },
+  hero_line2: { label: 'خط دوم عنوان', max: 60 },
+  hero_line3: { label: 'خط سوم عنوان (رنگی)', max: 60 },
+  hero_lede: { label: 'توضیح زیر عنوان', max: 300, long: true },
+  features_title: { label: 'عنوان بخش امکانات', max: 80 },
+  features_lede: { label: 'توضیح بخش امکانات', max: 240, long: true },
+  download_title: { label: 'عنوان بخش دانلود', max: 60 },
+  download_lede: { label: 'توضیح بخش دانلود', max: 300, long: true },
+  faq_title: { label: 'عنوان پرسش‌های رایج', max: 60 },
+};
+
+function landingConfig() {
+  const saved = readJson(LANDING_EDIT_FILE, {});
+  return {
+    hidden: Boolean(saved.hidden),
+    fields: saved.fields ?? {},
+    notes: Array.isArray(saved.notes) ? saved.notes : [],
+  };
+}
+
+/** متن‌های ذخیره‌شده را در HTML جای‌گذاری می‌کند (بدون تغییر ساختار فایل) */
+function renderLanding(html) {
+  const { hidden, fields, notes } = landingConfig();
+  if (hidden) {
+    return `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>در دسترس نیست</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0a0c12;color:#f5f7fc;font-family:Vazirmatn,Tahoma,sans-serif">
+<div style="text-align:center"><h1 style="font-size:18px">این سایت موقتاً در دسترس نیست</h1></div></body></html>`;
+  }
+  let out = html;
+  // جای‌گذاری با data-lx (متن) — ایمن و محدود
+  const map = {
+    'data-lx="title"': fields.title,
+    'data-lx="hero1"': fields.hero_line1,
+    'data-lx="hero2"': fields.hero_line2,
+    'data-lx="hero3"': fields.hero_line3,
+    'data-lx="lede"': fields.hero_lede,
+    'data-lx="features-title"': fields.features_title,
+    'data-lx="features-lede"': fields.features_lede,
+    'data-lx="download-title"': fields.download_title,
+    'data-lx="download-lede"': fields.download_lede,
+    'data-lx="faq-title"': fields.faq_title,
+  };
+  for (const [attr, value] of Object.entries(map)) {
+    if (!value) continue;
+    const re = new RegExp(`(<([a-z0-9]+)[^>]*${attr}[^>]*>)([\\s\\S]*?)(</\\2>)`, 'i');
+    out = out.replace(re, (_m, open, _tag, _inner, close) => `${open}${esc(value)}${close}`);
+  }
+  if (notes.length) {
+    const items = notes.map((n) => `<li>${esc(n)}</li>`).join('');
+    out = out.replace('<!--landing-notes-->', `<div style="border:1px solid #ff0057;border-radius:12px;padding:.9rem 1.1rem;margin:1.2rem auto;max-width:1140px;background:rgba(255,0,87,.08)">
+      <p style="font-weight:700;font-size:13px;margin:0 0 .4rem">اطلاعیه</p><ul style="margin:0;padding-inline-start:1.1rem;font-size:13px">${items}</ul></div>`);
+  }
+  if (fields.title) out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(fields.title)}</title>`);
+  return out;
+}
+
+function landingPage(session, flash) {
+  const cfg = landingConfig();
+  const groups = Object.entries(LANDING_FIELDS);
+  return layout({
+    title: 'لندینگ',
+    session,
+    active: `${ADMIN_BASE}/landing`,
+    flash,
+    body: `<h1>تنظیمات لندینگ</h1>
+    <div class="card">
+      <p class="muted" style="margin-top:0">متن‌های صفحهٔ معرفی را از همین‌جا عوض کن. فیلد خالی = متن پیش‌فرض فایل.</p>
+      <form method="post" action="${ADMIN_BASE}/landing/save">
+        <input type="hidden" name="csrf" value="${csrfToken(session)}">
+        <div class="actions" style="position:static;border-top:0;padding-top:0;margin:0 0 .9rem">
+          <button type="submit">ذخیرهٔ متن‌ها</button>
+          <span class="muted">فیلد خالی = متن پیش‌فرض</span>
+        </div>
+        <div class="form-grid">
+          ${groups.map(([key, meta]) => `<div class="fld${meta.long ? ' wide' : ''}">
+            <label for="f-${key}">${meta.label}</label>
+            ${meta.long
+              ? `<textarea id="f-${key}" name="f_${key}" rows="2" maxlength="${meta.max}">${esc(cfg.fields[key] ?? '')}</textarea>`
+              : `<input id="f-${key}" name="f_${key}" maxlength="${meta.max}" value="${esc(cfg.fields[key] ?? '')}">`}
+          </div>`).join('')}
+        </div>
+        <label style="margin-top:1rem">اطلاعیه بالای صفحه (هر خط یک مورد، خالی = بدون اطلاعیه)</label>
+        <textarea name="notes" rows="3" placeholder="مثلاً: نسخهٔ ۱.۳ به‌زودی منتشر می‌شود">${esc(cfg.notes.join('\n'))}</textarea>
+        <div class="actions">
+          <button type="submit">ذخیرهٔ متن‌ها</button>
+          <a class="btn-link" href="/" target="_blank" rel="noopener">دیدن لندینگ ↗</a>
+        </div>
+      </form>
+      <form method="post" action="${ADMIN_BASE}/landing/toggle" style="margin-top:.8rem">
+        <input type="hidden" name="csrf" value="${csrfToken(session)}">
+        <button class="${cfg.hidden ? '' : 'danger'}">${cfg.hidden ? 'نمایش لندینگ' : 'پنهان کردن لندینگ (صفحهٔ تعمیر)'}</button>
+      </form>
+      <p class="muted" style="margin-bottom:0">وقتی لندینگ پنهان باشد، بازدیدکننده پیام «موقتاً در دسترس نیست» می‌بیند؛ پنل و دانلود همچنان کار می‌کنند.</p>
+    </div>
+    <div class="card">
+      <h1 style="font-size:1rem">پیش‌نمایش</h1>
+      <p class="muted" style="margin-top:0">لندینگ در <a href="/" target="_blank" rel="noopener">صفحهٔ اصلی</a> سرو می‌شود (پس از ذخیره، حداکثر ۵ دقیقه کش).</p>
+    </div>`,
+  });
 }
 
 /* ─────────── pages ─────────── */
@@ -219,15 +369,15 @@ function loginPage(error) {
     session: null,
     active: '',
     flash: error ? { tone: 'bad', text: error } : null,
-    body: `<div class="card" style="max-width:380px;margin:8vh auto">
+    body: `<div class="login-wrap"><div class="card">
       <h1>پنل مدیریت جیم‌پرو</h1>
-      <form method="post" action="/login">
+      <form method="post" action="${ADMIN_BASE}/login">
         <label>رمز مدیر</label>
         <input type="password" name="password" autofocus required aria-label="رمز مدیر">
         <div style="margin-top:1rem"><button type="submit">ورود</button></div>
       </form>
       <p class="muted" style="margin-top:1rem">این پنل فقط برای مالک نرم‌افزار است. حساب دیگری ساخته نمی‌شود و ثبت‌نامی وجود ندارد.</p>
-    </div>`,
+    </div></div>`,
   });
 }
 
@@ -251,7 +401,7 @@ function dashboardPage(session) {
   return layout({
     title: 'داشبورد',
     session,
-    active: '/dashboard',
+    active: `${ADMIN_BASE}/dashboard`,
     body: `<h1>داشبورد</h1>
       <div class="grid">
         <div class="card"><div class="muted">کلیدهای فعال</div><div class="kpi">${fa(active.length)}</div><div class="muted">از ${fa(list.length)} کلید</div></div>
@@ -262,7 +412,7 @@ function dashboardPage(session) {
       <div class="card">
         <h1 style="font-size:1rem">آخرین تیکت‌ها</h1>
         <table><thead><tr><th>موضوع</th><th>دسته</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead><tbody>
-        ${recent.length ? recent.map((x) => `<tr><td>${esc(x.subject)}</td><td>${esc(x.category)}</td><td><span class="chip ${x.status === 'open' ? 'warn' : 'ok'}">${STATUS_LABEL[x.status] ?? esc(x.status)}</span></td><td class="num">${esc(String(x.createdAt).slice(0, 10))}</td><td><a href="/tickets/${esc(x.remoteId)}">باز کردن</a></td></tr>`).join('') : '<tr><td colspan="5" class="muted">تیکتی ثبت نشده</td></tr>'}
+        ${recent.length ? recent.map((x) => `<tr><td>${esc(x.subject)}</td><td>${esc(x.category)}</td><td><span class="chip ${x.status === 'open' ? 'warn' : 'ok'}">${STATUS_LABEL[x.status] ?? esc(x.status)}</span></td><td class="num">${esc(String(x.createdAt).slice(0, 10))}</td><td><a href="${ADMIN_BASE}/tickets/${esc(x.remoteId)}">باز کردن</a></td></tr>`).join('') : '<tr><td colspan="5" class="muted">تیکتی ثبت نشده</td></tr>'}
         </tbody></table>
       </div>
       <div class="card"><h1 style="font-size:1rem">اتصال نرم‌افزار به این سرور</h1>
@@ -279,11 +429,11 @@ function licensesPage(session, flash) {
   return layout({
     title: 'لایسنس‌ها',
     session,
-    active: '/licenses',
+    active: `${ADMIN_BASE}/licenses`,
     flash,
     body: `<h1>لایسنس‌ها</h1>
     <div class="card">
-      <form method="post" action="/licenses/create" class="grid" style="align-items:end">
+      <form method="post" action="${ADMIN_BASE}/licenses/create" class="grid" style="align-items:end">
         <input type="hidden" name="csrf" value="${csrfToken(session)}">
         <div><label>کلید (خالی = تولید خودکار)</label><input name="licenseKey" placeholder="GP-XXXX-XXXX-XXXX"></div>
         <div><label>نسخه</label><select name="edition">${EDITIONS.map((e) => `<option value="${e}" ${e === 'pro' ? 'selected' : ''}>${EDITION_LABEL[e]}</option>`).join('')}</select></div>
@@ -304,8 +454,8 @@ function licensesPage(session, flash) {
           <td class="num">${fa(v.updateMonths ?? 12)} ماه</td>
           <td class="num">${fa(used)}/${fa(v.maxActivations ?? 1)}</td>
           <td>${v.disabled ? '<span class="chip bad">غیرفعال</span>' : '<span class="chip ok">فعال</span>'}</td>
-          <td style="display:flex;gap:.35rem"><a href="/licenses/${encodeURIComponent(key)}">جزئیات</a>
-            <form method="post" action="/licenses/${encodeURIComponent(key)}/toggle" style="margin:0"><input type="hidden" name="csrf" value="${csrfToken(session)}"><button class="ghost" style="min-height:26px;padding:.15rem .5rem;font-size:12px">${v.disabled ? 'فعال‌سازی' : 'غیرفعال'}</button></form>
+          <td style="display:flex;gap:.35rem"><a href="${ADMIN_BASE}/licenses/${encodeURIComponent(key)}">جزئیات</a>
+            <form method="post" action="${ADMIN_BASE}/licenses/${encodeURIComponent(key)}/toggle" style="margin:0"><input type="hidden" name="csrf" value="${csrfToken(session)}"><button class="ghost" style="min-height:26px;padding:.15rem .5rem;font-size:12px">${v.disabled ? 'فعال‌سازی' : 'غیرفعال'}</button></form>
           </td></tr>`;
       }).join('') : '<tr><td colspan="7" class="muted">هنوز کلیدی ساخته نشده</td></tr>'}
       </tbody></table>
@@ -321,7 +471,7 @@ function licenseDetailPage(session, key, flash) {
   return layout({
     title: `لایسنس ${key}`,
     session,
-    active: '/licenses',
+    active: `${ADMIN_BASE}/licenses`,
     flash,
     body: `<h1>لایسنس <code>${esc(key)}</code></h1>
     <div class="card grid">
@@ -339,13 +489,13 @@ function licenseDetailPage(session, key, flash) {
       <h1 style="font-size:1rem">دستگاه‌های فعال</h1>
       <table><thead><tr><th>Machine ID</th><th>تاریخ</th><th>نسخهٔ برنامه</th><th></th></tr></thead><tbody>
       ${devices.length ? devices.map(([mid, v]) => `<tr><td class="num"><code>${esc(mid)}</code></td><td class="num">${esc(String(v.at).slice(0, 10))}</td><td class="num">${esc(v.appVersion ?? '—')}</td>
-        <td><form method="post" action="/licenses/${encodeURIComponent(key)}/deactivate" style="margin:0"><input type="hidden" name="csrf" value="${csrfToken(session)}"><input type="hidden" name="machineId" value="${esc(mid)}"><button class="ghost" style="min-height:26px;padding:.15rem .5rem;font-size:12px">آزاد کردن اسلات</button></form></td></tr>`).join('') : '<tr><td colspan="4" class="muted">هنوز روی دستگاهی فعال نشده</td></tr>'}
+        <td><form method="post" action="${ADMIN_BASE}/licenses/${encodeURIComponent(key)}/deactivate" style="margin:0"><input type="hidden" name="csrf" value="${csrfToken(session)}"><input type="hidden" name="machineId" value="${esc(mid)}"><button class="ghost" style="min-height:26px;padding:.15rem .5rem;font-size:12px">آزاد کردن اسلات</button></form></td></tr>`).join('') : '<tr><td colspan="4" class="muted">هنوز روی دستگاهی فعال نشده</td></tr>'}
       </tbody></table>
     </div>
     <div class="card">
       <h1 style="font-size:1rem">توکن بازیابی رمز (برای فراموشی رمز کاربر)</h1>
       <p class="muted">Machine ID را از صفحهٔ «لایسنس» در برنامهٔ مشتری بگیرید؛ توکن فقط روی همان دستگاه و برای همان نام کاربری معتبر است.</p>
-      <form method="post" action="/licenses/${encodeURIComponent(key)}/recovery" class="grid">
+      <form method="post" action="${ADMIN_BASE}/licenses/${encodeURIComponent(key)}/recovery" class="grid">
         <input type="hidden" name="csrf" value="${csrfToken(session)}">
         <div><label>Machine ID</label><input name="machineId" required placeholder="32 کاراکتر"></div>
         <div><label>نام کاربری</label><input name="username" required placeholder="admin"></div>
@@ -361,12 +511,12 @@ function updatesPage(session, flash, published) {
   return layout({
     title: 'آپدیت‌ها',
     session,
-    active: '/updates',
+    active: `${ADMIN_BASE}/updates`,
     flash,
     body: `<h1>انتشار آپدیت</h1>
     <div class="card">
       <p class="muted">فایل نصب را در <code>server/releases/</code> بگذارید (همراه سرویس API سرو می‌شود) و اینجا نسخه را ثبت کنید. مانیفست با کلید خصوصی امضا می‌شود؛ برنامه قبل از نصب، امضا و sha256 را بررسی می‌کند.</p>
-      <form method="post" action="/updates/publish">
+      <form method="post" action="${ADMIN_BASE}/updates/publish">
         <input type="hidden" name="csrf" value="${csrfToken(session)}">
         <div class="grid">
           <div><label>نسخه</label><input name="version" placeholder="1.0.1" required></div>
@@ -386,13 +536,13 @@ function ticketsPage(session) {
   return layout({
     title: 'تیکت‌ها',
     session,
-    active: '/tickets',
+    active: `${ADMIN_BASE}/tickets`,
     body: `<h1>تیکت‌های پشتیبانی</h1>
     <div class="card"><table><thead><tr><th>موضوع</th><th>دسته</th><th>کلید</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead><tbody>
     ${t.length ? t.map((x) => `<tr><td>${esc(x.subject)}</td><td>${esc(x.category)}</td><td class="num"><code>${esc(x.licenseKey ?? '—')}</code></td>
       <td><span class="chip ${x.status === 'closed' ? 'ok' : 'warn'}">${STATUS_LABEL[x.status] ?? esc(x.status)}</span></td>
       <td class="num">${esc(String(x.createdAt).slice(0, 16).replace('T', ' '))}</td>
-      <td><a href="/tickets/${esc(x.remoteId)}">پاسخ دادن</a></td></tr>`).join('') : '<tr><td colspan="6" class="muted">تیکتی نیست</td></tr>'}
+      <td><a href="${ADMIN_BASE}/tickets/${esc(x.remoteId)}">پاسخ دادن</a></td></tr>`).join('') : '<tr><td colspan="6" class="muted">تیکتی نیست</td></tr>'}
     </tbody></table></div>`,
   });
 }
@@ -403,7 +553,7 @@ function ticketPage(session, id, flash) {
   return layout({
     title: t.subject,
     session,
-    active: '/tickets',
+    active: `${ADMIN_BASE}/tickets`,
     flash,
     body: `<h1>${esc(t.subject)}</h1>
     <p class="muted">دسته: ${esc(t.category)} · کلید: <code>${esc(t.licenseKey ?? '—')}</code> · نسخهٔ برنامه: ${esc(t.appVersion ?? '—')} · وضعیت: ${STATUS_LABEL[t.status] ?? esc(t.status)}</p>
@@ -411,7 +561,7 @@ function ticketPage(session, id, flash) {
       ${t.messages.map((m) => `<div style="border:1px solid var(--edge);border-radius:10px;padding:.6rem .8rem;margin-bottom:.6rem"><div class="muted" style="font-size:11.5px">${m.direction === 'in' ? 'مشتری' : 'پشتیبانی'} · ${esc(String(m.createdAt).slice(0, 16).replace('T', ' '))}</div><div style="white-space:pre-wrap">${esc(m.body)}</div></div>`).join('')}
     </div>
     <div class="card">
-      <form method="post" action="/tickets/${esc(id)}/reply">
+      <form method="post" action="${ADMIN_BASE}/tickets/${esc(id)}/reply">
         <input type="hidden" name="csrf" value="${csrfToken(session)}">
         <label>پاسخ شما</label>
         <textarea name="body" rows="4" required></textarea>
@@ -419,7 +569,7 @@ function ticketPage(session, id, flash) {
           <button type="submit">ارسال پاسخ</button>
         </div>
       </form>
-      <form method="post" action="/tickets/${esc(id)}/close" style="margin-top:.6rem"><input type="hidden" name="csrf" value="${csrfToken(session)}"><button class="ghost">بستن تیکت</button></form>
+      <form method="post" action="${ADMIN_BASE}/tickets/${esc(id)}/close" style="margin-top:.6rem"><input type="hidden" name="csrf" value="${csrfToken(session)}"><button class="ghost">بستن تیکت</button></form>
     </div>`,
   });
 }
@@ -428,7 +578,7 @@ function helpPage(session) {
   return layout({
     title: 'راهنما',
     session,
-    active: '/help',
+    active: `${ADMIN_BASE}/help`,
     body: `<h1>راهنمای راه‌اندازی روی سرور</h1>
     <div class="card"><ol>
       <li>کلیدها را در <code>server/keys/</code> نگه دارید؛ کلید خصوصی <code>license-private.pem</code> را هرگز جایی آپلود نکنید.</li>
@@ -445,12 +595,20 @@ function helpPage(session) {
 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
-    let raw = '';
+    // بایت‌ها جمع می‌شوند و یک‌جا UTF-8 دیکود می‌شوند؛ += روی Buffer
+    // کاراکترهای فارسی چندبایتی را در مرز chunk ها خراب می‌کند.
+    const chunks = [];
+    let size = 0;
     req.on('data', (c) => {
-      raw += c;
-      if (raw.length > 1_000_000) reject(new Error('too large'));
+      size += c.length;
+      if (size > 1_000_000) {
+        reject(new Error('too large'));
+        return;
+      }
+      chunks.push(c);
     });
     req.on('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8');
       const params = new URLSearchParams(raw);
       resolve(Object.fromEntries(params));
     });
@@ -479,7 +637,7 @@ function flashFrom(url) {
 function requireSession(req, res) {
   const session = readSession(req.headers.cookie);
   if (!session) {
-    res.writeHead(303, { location: '/login' });
+    res.writeHead(303, { location: `${ADMIN_BASE}/login` });
     res.end();
     return null;
   }
@@ -537,7 +695,7 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
         return res.end('landing missing');
       }
-      const html = fs.readFileSync(LANDING_FILE);
+      const html = renderLanding(fs.readFileSync(LANDING_FILE, 'utf8'));
       res.writeHead(200, {
         'content-type': 'text/html; charset=utf-8',
         'cache-control': 'public, max-age=300',
@@ -595,12 +753,19 @@ const server = http.createServer(async (req, res) => {
       return res.end(data);
     }
 
-    if (url.pathname === '/login' && req.method === 'GET') {
+    /* /login عمومی وجود ندارد؛ فقط مسیر اختصاصی مالک */
+    if (url.pathname === '/login' || url.pathname === '/dashboard' || url.pathname === '/licenses' || url.pathname === '/tickets' || url.pathname === '/updates' || url.pathname === '/help') {
+      res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+      return res.end('not found');
+    }
+
+    /* آدرس‌های قدیمی پنل به مسیر مخفی هدایت شوند (برای راحتی خود مالک) */
+    if (url.pathname === `${ADMIN_BASE}/login` && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(loginPage(null));
     }
 
-    if (url.pathname === '/login' && req.method === 'POST') {
+    if (url.pathname === `${ADMIN_BASE}/login` && req.method === 'POST') {
       if (!sameOriginPost(req)) {
         res.writeHead(403);
         return res.end('forbidden');
@@ -619,13 +784,13 @@ const server = http.createServer(async (req, res) => {
       const payload = { sid: crypto.randomBytes(12).toString('hex'), exp: Date.now() + 12 * 3600_000 };
       res.writeHead(303, {
         'set-cookie': `gp_admin=${encodeURIComponent(signSession(payload))}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`,
-        location: '/dashboard',
+        location: `${ADMIN_BASE}/dashboard`,
       });
       return res.end();
     }
 
-    if (url.pathname === '/logout') {
-      res.writeHead(303, { 'set-cookie': 'gp_admin=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0', location: '/login' });
+    if (url.pathname === `${ADMIN_BASE}/logout`) {
+      res.writeHead(303, { 'set-cookie': 'gp_admin=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0', location: `${ADMIN_BASE}/login` });
       return res.end();
     }
 
@@ -660,10 +825,32 @@ const server = http.createServer(async (req, res) => {
         return res.end(layout({ title: 'خطا', session, active: '', flash: { tone: 'bad', text: 'توکن فرم نامعتبر است؛ صفحه را دوباره باز کنید' }, body: '' }));
       }
 
-      if (url.pathname === '/licenses/create') {
+      if (url.pathname === `${ADMIN_BASE}/landing/save`) {
+        const fields = {};
+        for (const key of Object.keys(LANDING_FIELDS)) {
+          const raw = String(body[`f_${key}`] ?? '').trim().slice(0, LANDING_FIELDS[key].max);
+          if (raw) fields[key] = raw;
+        }
+        const notes = String(body.notes ?? '')
+          .split(new RegExp('\r?\n'))
+          .map((n) => n.trim())
+          .filter(Boolean)
+          .slice(0, 5);
+        const prev = readJson(LANDING_EDIT_FILE, {});
+        writeJson(LANDING_EDIT_FILE, { ...prev, fields, notes, updatedAt: new Date().toISOString() });
+        return redirect(res, `${ADMIN_BASE}/landing`, { tone: 'ok', text: 'متن‌های لندینگ ذخیره شد' });
+      }
+
+      if (url.pathname === `${ADMIN_BASE}/landing/toggle`) {
+        const prev = readJson(LANDING_EDIT_FILE, {});
+        writeJson(LANDING_EDIT_FILE, { ...prev, hidden: !prev.hidden, updatedAt: new Date().toISOString() });
+        return redirect(res, `${ADMIN_BASE}/landing`, { tone: 'ok', text: prev.hidden ? 'لندینگ نمایش داده می‌شود' : 'لندینگ پنهان شد' });
+      }
+
+      if (url.pathname === `${ADMIN_BASE}/licenses/create`) {
         const k = keys();
         const key = (body.licenseKey || '').trim().toUpperCase() || newKey();
-        if (k[key]) return redirect(res, '/licenses', { tone: 'bad', text: 'این کلید از قبل وجود دارد' });
+        if (k[key]) return redirect(res, `${ADMIN_BASE}/licenses`, { tone: 'bad', text: 'این کلید از قبل وجود دارد' });
         k[key] = {
           edition: EDITIONS.includes(body.edition) ? body.edition : 'pro',
           updateMonths: Math.max(0, Math.min(120, Number(body.updateMonths ?? 12))),
@@ -674,10 +861,10 @@ const server = http.createServer(async (req, res) => {
           disabled: false,
         };
         writeJson(KEYS_FILE, k);
-        return redirect(res, `/licenses/${encodeURIComponent(key)}`, { tone: 'ok', text: `کلید ساخته شد: ${key}` });
+        return redirect(res, `${ADMIN_BASE}/licenses/${encodeURIComponent(key)}`, { tone: 'ok', text: `کلید ساخته شد: ${key}` });
       }
 
-      const toggle = url.pathname.match(/^\/licenses\/([^/]+)\/toggle$/);
+      const toggle = url.pathname.match(new RegExp(`^${ADMIN_BASE}/licenses/([^/]+)/toggle$`));
       if (toggle) {
         const key = decodeURIComponent(toggle[1]);
         const k = keys();
@@ -685,21 +872,21 @@ const server = http.createServer(async (req, res) => {
           k[key].disabled = !k[key].disabled;
           writeJson(KEYS_FILE, k);
         }
-        return redirect(res, '/licenses', { tone: 'ok', text: 'وضعیت کلید تغییر کرد' });
+        return redirect(res, `${ADMIN_BASE}/licenses`, { tone: 'ok', text: 'وضعیت کلید تغییر کرد' });
       }
 
-      const deactivate = url.pathname.match(/^\/licenses\/([^/]+)\/deactivate$/);
+      const deactivate = url.pathname.match(new RegExp(`^${ADMIN_BASE}/licenses/([^/]+)/deactivate$`));
       if (deactivate) {
         const a = activations();
         delete a[body.machineId];
         writeJson(ACT_FILE, a);
-        return redirect(res, `/licenses/${deactivate[1]}`, { tone: 'ok', text: 'اسلات دستگاه آزاد شد' });
+        return redirect(res, `${ADMIN_BASE}/licenses/${deactivate[1]}`, { tone: 'ok', text: 'اسلات دستگاه آزاد شد' });
       }
 
-      if (url.pathname === '/updates/publish') {
+      if (url.pathname === `${ADMIN_BASE}/updates/publish`) {
         const privateKey = crypto.createPrivateKey(fs.readFileSync(path.join(__dirname, 'keys', 'license-private.pem'), 'utf8'));
         const file = path.join(__dirname, 'releases', path.basename(body.fileName ?? ''));
-        if (!fs.existsSync(file)) return redirect(res, '/updates', { tone: 'bad', text: 'فایل در server/releases پیدا نشد' });
+        if (!fs.existsSync(file)) return redirect(res, `${ADMIN_BASE}/updates`, { tone: 'bad', text: 'فایل در server/releases پیدا نشد' });
         const buf = fs.readFileSync(file);
         const manifest = {
           version: String(body.version ?? '').trim(),
@@ -712,10 +899,10 @@ const server = http.createServer(async (req, res) => {
         };
         const signature = crypto.sign(null, Buffer.from(JSON.stringify(manifest, Object.keys(manifest).sort())), privateKey).toString('base64');
         writeJson(MANIFEST_FILE, { manifest, signature });
-        return redirect(res, '/updates', { tone: 'ok', text: `نسخهٔ ${manifest.version} امضا و منتشر شد` });
+        return redirect(res, `${ADMIN_BASE}/updates`, { tone: 'ok', text: `نسخهٔ ${manifest.version} امضا و منتشر شد` });
       }
 
-      const reply = url.pathname.match(/^\/tickets\/([^/]+)\/reply$/);
+      const reply = url.pathname.match(new RegExp(`^${ADMIN_BASE}/tickets/([^/]+)/reply$`));
       if (reply) {
         const t = tickets();
         const ticket = t[reply[1]];
@@ -724,20 +911,20 @@ const server = http.createServer(async (req, res) => {
           ticket.status = 'answered';
           writeJson(TICKETS_FILE, t);
         }
-        return redirect(res, `/tickets/${reply[1]}`, { tone: 'ok', text: 'پاسخ ثبت شد' });
+        return redirect(res, `${ADMIN_BASE}/tickets/${reply[1]}`, { tone: 'ok', text: 'پاسخ ثبت شد' });
       }
 
-      const close = url.pathname.match(/^\/tickets\/([^/]+)\/close$/);
+      const close = url.pathname.match(new RegExp(`^${ADMIN_BASE}/tickets/([^/]+)/close$`));
       if (close) {
         const t = tickets();
         if (t[close[1]]) {
           t[close[1]].status = 'closed';
           writeJson(TICKETS_FILE, t);
         }
-        return redirect(res, '/tickets', { tone: 'ok', text: 'تیکت بسته شد' });
+        return redirect(res, `${ADMIN_BASE}/tickets`, { tone: 'ok', text: 'تیکت بسته شد' });
       }
 
-      const recovery = url.pathname.match(/^\/licenses\/([^/]+)\/recovery$/);
+      const recovery = url.pathname.match(new RegExp(`^${ADMIN_BASE}/licenses/([^/]+)/recovery$`));
       if (recovery) {
         const privateKey = crypto.createPrivateKey(fs.readFileSync(path.join(__dirname, 'keys', 'license-private.pem'), 'utf8'));
         const payload = {
@@ -754,7 +941,7 @@ const server = http.createServer(async (req, res) => {
           layout({
             title: 'توکن بازیابی',
             session,
-            active: '/licenses',
+            active: `${ADMIN_BASE}/licenses`,
             body: `<h1>توکن بازیابی صادر شد</h1>
               <div class="card"><p class="muted">این دو مقدار را برای مشتری بفرستید؛ او در صفحهٔ ورود → «رمز عبور را فراموش کرده‌ام» → تب «توکن پشتیبانی» جای‌گذاری می‌کند. اعتبار: ${fa(Math.max(5, Math.min(10080, Number(body.minutes ?? 60))))} دقیقه.</p>
               <pre>${esc(text)}</pre></div>`,
@@ -763,33 +950,37 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    if (url.pathname === '/dashboard') {
+    if (url.pathname === `${ADMIN_BASE}/dashboard` || url.pathname === ADMIN_BASE) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(dashboardPage(session));
     }
-    if (url.pathname === '/licenses') {
+    if (url.pathname === `${ADMIN_BASE}/licenses`) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(licensesPage(session, flash));
     }
-    const detail = url.pathname.match(/^\/licenses\/([^/]+)$/);
+    const detail = url.pathname.match(new RegExp(`^${ADMIN_BASE}/licenses/([^/]+)$`));
     if (detail) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(licenseDetailPage(session, decodeURIComponent(detail[1]), flash));
     }
-    if (url.pathname === '/updates') {
+    if (url.pathname === `${ADMIN_BASE}/updates`) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(updatesPage(session, flash));
     }
-    if (url.pathname === '/tickets') {
+    if (url.pathname === `${ADMIN_BASE}/tickets`) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(ticketsPage(session));
     }
-    const ticket = url.pathname.match(/^\/tickets\/([^/]+)$/);
+    const ticket = url.pathname.match(new RegExp(`^${ADMIN_BASE}/tickets/([^/]+)$`));
     if (ticket) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(ticketPage(session, ticket[1], flash));
     }
-    if (url.pathname === '/help') {
+    if (url.pathname === `${ADMIN_BASE}/landing`) {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      return res.end(landingPage(session, flash));
+    }
+    if (url.pathname === `${ADMIN_BASE}/help`) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(helpPage(session));
     }

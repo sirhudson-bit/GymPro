@@ -3,499 +3,394 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>جیم‌پرو — نرم‌افزار مدیریت باشگاه</title>
-<meta name="description" content="جیم‌پرو: نرم‌افزار آفلاین مدیریت باشگاه بدنسازی برای ویندوز. اعضا، قرارداد، تردد با اثر انگشت، کمد، بوفه و گزارش — با لایسنس دائمی.">
+<title data-lx="title">جیم‌پرو — نرم‌افزار مدیریت باشگاه</title>
+<meta name="description" content="نرم‌افزار ویندوز مدیریت باشگاه بدنسازی: اعضا، قرارداد، تردد با اثر انگشت، کمد، بوفه و گزارش. کاملاً آفلاین.">
 <meta property="og:title" content="جیم‌پرو — نرم‌افزار مدیریت باشگاه">
-<meta property="og:description" content="اعضا، قرارداد، تردد با اثر انگشت، بوفه و گزارش. آفلاین، فارسی و راست‌چین.">
 <meta property="og:image" content="/icon.png">
-<meta name="theme-color" content="#0d0f17">
+<meta name="theme-color" content="#0a0c12">
 <link rel="icon" href="/icon.png">
 <style>
-/* ═══ توکن‌های طراحی: رنگ‌ها از آیکون برنامه ═══ */
 :root{
-  --pink:#ff0057;
-  --violet:#a34eff;
-  --sky:#53a5ff;
-  --ink:#f4f6fb;
-  --ink-dim:#a5adc0;
-  --ink-faint:#6b7387;
-  --void:#0a0c12;
-  --card:#11141d;
-  --card-2:#161a25;
-  --edge:rgba(255,255,255,.08);
-  --edge-strong:rgba(255,255,255,.16);
-  --grad:linear-gradient(90deg,var(--pink),var(--violet) 52%,var(--sky));
+  --pink:#ff0057;--violet:#a34eff;--sky:#53a5ff;
+  --ink:#f5f7fc;--dim:#a8b0c2;--faint:#717a8d;
+  --void:#0a0c12;--card:#11141c;--card2:#161a24;
+  --edge:rgba(255,255,255,.09);--edge2:rgba(255,255,255,.17);
+  --grad:linear-gradient(96deg,var(--pink),var(--violet) 52%,var(--sky));
   --font:Vazirmatn,'Segoe UI',Tahoma,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{
-  background:var(--void);color:var(--ink);font-family:var(--font);
-  font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden;
-}
+body{background:var(--void);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img{display:block;max-width:100%}
 a{color:inherit;text-decoration:none}
-::selection{background:rgba(255,0,87,.35)}
-:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-radius:6px}
-.wrap{width:min(1180px,calc(100% - 3rem));margin-inline:auto}
-.eyebrow{font-size:13px;font-weight:600;color:var(--ink-faint);letter-spacing:.02em}
+::selection{background:rgba(255,0,87,.3)}
+:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-radius:8px}
+.wrap{width:min(1140px,calc(100% - 2.5rem));margin-inline:auto}
+.eyebrow{font-size:12.5px;font-weight:700;color:var(--faint)}
 
-/* ═══ هدر ═══ */
-header{position:sticky;top:0;z-index:40;background:rgba(10,12,18,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--edge)}
-.nav{display:flex;align-items:center;gap:1.25rem;padding:.9rem 0}
-.brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:17px}
-.brand img{height:30px}
-.nav-links{display:flex;gap:1.15rem;font-size:14.5px;color:var(--ink-dim)}
-.nav .btn-primary{margin-inline-start:auto}
-.nav-links a{transition:color .15s}
+header{position:sticky;top:0;z-index:30;background:rgba(10,12,18,.86);backdrop-filter:blur(16px);border-bottom:1px solid var(--edge)}
+.nav{display:flex;align-items:center;gap:1rem;padding:.85rem 0}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:16.5px}
+.brand img{height:28px;width:auto}
+.nav-links{display:flex;gap:1.1rem;font-size:14px;color:var(--dim)}
 .nav-links a:hover{color:var(--ink)}
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
-  padding:.7rem 1.35rem;border-radius:11px;font-weight:700;font-size:15px;
-  border:1px solid transparent;transition:transform .12s,filter .15s,background .15s;
-}
+.nav .btn{margin-inline-start:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;padding:.68rem 1.25rem;border-radius:11px;font-weight:700;font-size:14.5px;border:1px solid transparent;transition:filter .15s,background .15s,transform .1s}
 .btn:active{transform:translateY(1px)}
 .btn-primary{background:var(--grad);color:#fff}
 .btn-primary:hover{filter:brightness(1.08)}
-.btn-ghost{border-color:var(--edge-strong);color:var(--ink)}
+.btn-ghost{border-color:var(--edge2);color:var(--ink)}
 .btn-ghost:hover{background:rgba(255,255,255,.05)}
-.btn-sm{padding:.5rem .9rem;font-size:13.5px;border-radius:9px}
+.btn-sm{padding:.48rem .95rem;font-size:13px;border-radius:9px}
 
-/* ═══ قهرمان صفحه ═══ */
-.hero{position:relative;padding:3.5rem 0 6.5rem;overflow:hidden}
-.hero-grid{display:grid;grid-template-columns:1fr 1.02fr;gap:3.25rem;align-items:center}
-.hero h1{
-  font-size:clamp(2.1rem,4.4vw,3.65rem);font-weight:800;line-height:1.22;
-  letter-spacing:-.015em;margin-bottom:1.35rem;
-}
-.hero h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero h1 .l{display:block;white-space:nowrap}
-.hero-sub{font-size:clamp(1rem,1.35vw,1.13rem);color:#c3cad9;max-width:36ch;line-height:1.95;margin-bottom:2rem}
-.hero-cta{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;justify-content:flex-start}
-.hero-cta .btn-primary{padding-inline:1.7rem}
-.hero-meta{display:flex;gap:1.6rem;margin-top:2.4rem;padding-top:1.5rem;border-top:1px solid var(--edge);flex-wrap:wrap}
-.hero-meta div{font-size:13px;color:#9aa3b8;min-width:5.5rem}
-.hero-meta b{display:block;font-size:18px;font-weight:800;color:var(--ink);margin-bottom:.1rem}
+.hero{position:relative;padding:4rem 0 5rem;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:-1}
+.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 40%;opacity:.34;filter:saturate(.9)}
+.hero-bg::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(78% 62% at 28% 22%,rgba(255,0,87,.2),transparent 64%),
+  linear-gradient(180deg,rgba(10,12,18,.86),rgba(10,12,18,.97) 62%,var(--void))}
+.hero-top{max-width:64ch}
+.hero-frame{margin-top:2.5rem}
+h1{font-size:clamp(1.9rem,3.7vw,2.9rem);font-weight:800;line-height:1.28;letter-spacing:-.01em;margin-bottom:1rem}
+h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .l{display:inline}
+h1 .l+.l{margin-inline-start:.25em}
+.lede{color:#c5ccda;font-size:clamp(.98rem,1.3vw,1.08rem);line-height:1.9;max-width:52ch;margin-bottom:1.7rem}
+.cta-row{display:flex;gap:.7rem;flex-wrap:wrap}
+.stats{display:flex;gap:1.5rem;margin-top:2.1rem;padding-top:1.3rem;border-top:1px solid var(--edge);flex-wrap:wrap}
+.stats div{font-size:12.5px;color:#98a1b5;min-width:5.2rem}
+.stats b{display:block;font-size:17px;font-weight:800;color:var(--ink);margin-bottom:.05rem}
 
-/* بافت عکس پشت قهرمان */
-.hero-photo{position:absolute;inset:0;z-index:-1;overflow:hidden;opacity:.72}
-.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:center 35%}
-.hero-photo::after{content:"";position:absolute;inset:0;background:
-  radial-gradient(90% 70% at 75% 18%,rgba(255,0,87,.22),transparent 62%),
-  linear-gradient(90deg,var(--void) 8%,rgba(10,12,18,.93) 45%,rgba(10,12,18,.66) 100%),
-  linear-gradient(180deg,rgba(10,12,18,.55),rgba(10,12,18,.96))}
+.frame{position:relative;border-radius:13px;overflow:hidden;border:1px solid rgba(255,255,255,.19);background:#0c0f16;
+  box-shadow:0 44px 90px -48px #000,0 0 60px -26px rgba(255,0,87,.26)}
+.frame img{width:100%;height:auto}
 
-/* نوار عکس تمام‌عرض */
-.band{position:relative;height:clamp(240px,34vw,420px);overflow:hidden;border-block:1px solid var(--edge)}
-.band img{width:100%;height:100%;object-fit:cover;filter:grayscale(.35) contrast(1.05)}
-.band::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,12,18,.94),rgba(10,12,18,.35) 45%,rgba(10,12,18,.94)),linear-gradient(180deg,rgba(10,12,18,.5),rgba(10,12,18,.5))}
-.band-txt{position:absolute;inset:0;display:flex;align-items:center;z-index:1}
-.band-txt blockquote{font-size:clamp(1.12rem,2.1vw,1.6rem);font-weight:800;line-height:1.6;max-width:20ch;margin:0;text-wrap:balance}
-.band-txt cite{display:block;font-size:13.5px;color:#b3bacb;font-style:normal;margin-top:1rem;font-weight:600}
+section{padding:4rem 0}
+.sec-head{max-width:56ch;margin-bottom:2.25rem}
+.sec-head h2{font-size:clamp(1.4rem,2.4vw,1.95rem);font-weight:800;line-height:1.4;margin-bottom:.6rem}
+.sec-head p{color:var(--dim);font-size:15px}
 
-/* سه عکس با موضوع باشگاه */
-.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
-.trio figure{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--edge);aspect-ratio:4/3}
-.trio img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
-.trio figure:hover img{transform:scale(1.03)}
-.trio figcaption{position:absolute;inset:auto 0 0 0;padding:.9rem 1rem;font-size:13.5px;font-weight:700;background:linear-gradient(180deg,transparent,rgba(10,12,18,.9))}
+.boxes{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem}
+.box{border:1px solid var(--edge);border-radius:14px;background:linear-gradient(170deg,var(--card2),var(--card));padding:1.15rem 1rem 1.25rem;transition:border-color .18s,transform .18s}
+.box:hover{border-color:var(--edge2);transform:translateY(-2px)}
+.box .ico{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;margin-bottom:.85rem;
+  background:color-mix(in srgb,var(--c) 14%,transparent);border:1px solid color-mix(in srgb,var(--c) 34%,transparent)}
+.box .ico svg{stroke:var(--c)}
+.box h3{font-size:14.5px;font-weight:700;margin-bottom:.35rem}
+.box p{font-size:12.5px;color:var(--dim);line-height:1.75}
 
-/* نمایش دستگاه: پنجرهٔ برنامه */
-.shot-frame{position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.2);background:var(--card);box-shadow:0 40px 90px -46px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.05),0 0 70px -20px rgba(255,0,87,.22)}
-.shot-frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 78%,rgba(10,12,18,.92));pointer-events:none}
-.shot-frame img{filter:brightness(1.12) saturate(1.05)}
-.shot-frame img{width:100%}
-.shot-tag{position:absolute;bottom:.7rem;inset-inline-end:.7rem;font-size:12.5px;font-weight:700;padding:.3rem .7rem;border-radius:999px;background:rgba(10,12,18,.75);border:1px solid var(--edge-strong);backdrop-filter:blur(8px)}
+.plates{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem}
+.plate{border:1px solid var(--edge);border-radius:15px;background:var(--card);padding:1.15rem;display:flex;flex-direction:column;gap:.9rem}
+.plate .cap{display:flex;align-items:center;gap:.5rem;font-size:13px;font-weight:700;color:var(--dim)}
+.plate .cap span{width:6px;height:6px;border-radius:99px;background:var(--c);box-shadow:0 0 10px var(--c)}
+.plate svg{width:100%;height:auto;display:block}
 
-/* نوار گرادیانی */
-.rule{height:3px;background:var(--grad);border-radius:999px}
+.shots{display:grid;gap:2.25rem}
+.shot-row{display:block;padding-bottom:2.5rem;border-bottom:1px solid var(--edge)}
+.shot-row:last-child{border-bottom:0;padding-bottom:0}
 
-/* ═══ بخش‌ها ═══ */
-section{padding:4.5rem 0;position:relative}
-.sec-head{max-width:62ch;margin-bottom:2.75rem}
-.sec-head h2{font-size:clamp(1.5rem,2.6vw,2.1rem);font-weight:800;line-height:1.35;margin-bottom:.85rem}
-.sec-head p{color:var(--ink-dim);font-size:15.5px}
+.shot-txt{margin-bottom:1.1rem}
+.shot-txt h3{font-size:clamp(1.15rem,1.9vw,1.45rem);font-weight:800;line-height:1.45;margin-bottom:.45rem}
+.shot-txt p{color:var(--dim);font-size:14.5px;max-width:58ch}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.9rem}
+.chip{font-size:12px;font-weight:600;padding:.22rem .6rem;border-radius:99px;border:1px solid var(--edge2);color:var(--dim)}
 
-/* قابلیت‌ها: فهرست افقی، بدون شبکهٔ کارت یکسان */
-.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--edge)}
-.feat-item{padding:1.9rem 1.6rem;border-bottom:1px solid var(--edge);border-inline-start:1px solid var(--edge);position:relative;transition:background .18s}
-.feat-item:first-child{border-inline-start:0}
-.feat-item:hover{background:rgba(255,255,255,.022)}
-.feat-item .n{font-size:12px;font-weight:700;color:var(--ink-faint);font-variant-numeric:tabular-nums}
-.feat-item h3{font-size:17px;font-weight:700;margin-bottom:.45rem}
-.feat-item p{font-size:14px;color:#b9c1d2;line-height:1.85}
-.feat-item .h{display:flex;align-items:center;gap:.55rem;margin-bottom:.5rem}
-.feat-item .h svg{opacity:.85;flex-shrink:0}
+.dl{border-radius:18px;border:1px solid var(--edge2);overflow:hidden;background:
+  radial-gradient(120% 130% at 88% 0%,rgba(255,0,87,.15),transparent 58%),
+  radial-gradient(110% 120% at 8% 100%,rgba(83,165,255,.14),transparent 60%),var(--card)}
+.dl-in{display:grid;grid-template-columns:1.1fr .9fr;gap:2.25rem;padding:2.4rem;align-items:center}
+.dl h2{font-size:clamp(1.45rem,2.4vw,1.85rem);font-weight:800;margin-bottom:.6rem}
+.dl p{color:#c0c7d6;font-size:14.5px;margin-bottom:1.35rem;max-width:38ch}
+.spec{border:1px solid var(--edge2);border-radius:13px;padding:.95rem 1.05rem;background:rgba(8,10,15,.55)}
+.spec .t{font-size:11.5px;font-weight:700;color:var(--faint);margin-bottom:.55rem}
+.spec .r{display:flex;justify-content:space-between;gap:.75rem;font-size:13px;padding:.3rem 0;color:#a9b1c2}
+.spec .r b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+.spec .r+.r{border-top:1px dashed rgba(255,255,255,.07)}
+.need{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.9rem;font-size:12px;color:var(--faint)}
+.need span{border:1px solid var(--edge);border-radius:8px;padding:.2rem .5rem}
 
-/* گالری تصویری قابلیت‌ها */
-.gallery{display:grid;gap:2.5rem}
-.gal-row{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:center}
-.gal-row.flip .gal-text{order:2}
-.gal-text h3{font-size:clamp(1.25rem,2vw,1.6rem);font-weight:800;margin-bottom:.7rem;line-height:1.4}
-.gal-text p{color:var(--ink-dim);font-size:15px;max-width:40ch}
-.gal-tags{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:1.1rem}
-.tag{font-size:12.5px;font-weight:600;padding:.25rem .65rem;border-radius:999px;border:1px solid var(--edge-strong);color:var(--ink-dim)}
-
-/* ═══ دانلود ═══ */
-.dl{position:relative;border-radius:20px;border:1px solid var(--edge-strong);overflow:hidden;background:
-  radial-gradient(120% 120% at 85% 0%,rgba(255,0,87,.14),transparent 60%),
-  radial-gradient(110% 110% at 15% 100%,rgba(83,165,255,.12),transparent 62%),
-  var(--card)}
-.dl-inner{display:grid;grid-template-columns:1.15fr .85fr;gap:2.5rem;padding:2.75rem;align-items:center}
-.dl h2{font-size:clamp(1.55rem,2.6vw,2rem);font-weight:800;margin-bottom:.8rem}
-.dl p{color:#c0c7d6;font-size:15px;margin-bottom:1.5rem}
-.dl-file{border:1px solid var(--edge-strong);border-radius:14px;padding:1rem 1.15rem;background:rgba(10,12,18,.5)}
-.dl-file .row{display:flex;justify-content:space-between;gap:.75rem;font-size:13.5px;padding:.34rem 0;color:#a9b1c2}
-.dl-file .row b{color:var(--ink);font-variant-numeric:tabular-nums}
-.dl-file .row + .row{border-top:1px dashed var(--edge)}
-.dl-file-head{font-size:12px;font-weight:700;color:var(--ink-faint);margin-bottom:.6rem}
-.req{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;font-size:12.5px;color:var(--ink-faint)}
-.req span{border:1px solid var(--edge);border-radius:8px;padding:.25rem .55rem}
-.dl-file .row + .row{border-top:1px dashed rgba(255,255,255,.06)}
-
-/* ═══ پنل مالک ═══ */
-.owner{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:center}
-.lock{display:flex;flex-direction:column;gap:.9rem}
-.lock-item{display:flex;gap:.8rem;align-items:flex-start;padding:.95rem 1.1rem;border:1px solid var(--edge);border-radius:12px;background:var(--card)}
-.lock-item svg{flex-shrink:0;margin-top:.15rem;color:var(--violet)}
-.lock-item div{font-size:14px;color:var(--ink-dim)}
-.lock-item b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:.15rem}
-
-/* ═══ سوالات ═══ */
 .faq{border-top:1px solid var(--edge)}
-.faq details{border-bottom:1px solid var(--edge);padding:1.1rem 0}
-.faq summary{cursor:pointer;font-weight:700;font-size:15.5px;display:flex;align-items:center;gap:.6rem;list-style:none}
+.faq details{border-bottom:1px solid var(--edge);padding:1rem 0}
+.faq summary{cursor:pointer;font-weight:700;font-size:15px;display:flex;align-items:center;gap:.55rem;list-style:none}
 .faq summary::marker,.faq summary::-webkit-details-marker{display:none}
-.faq summary svg{transition:transform .18s}
+.faq summary svg{transition:transform .18s;color:var(--faint)}
 .faq details[open] summary svg{transform:rotate(90deg)}
-.faq p{color:var(--ink-dim);font-size:14.5px;margin-top:.7rem;max-width:68ch}
-
-/* ═══ پایان ═══ */
-footer{border-top:1px solid var(--edge);padding:2.5rem 0 3rem}
-.foot{display:flex;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;align-items:center;font-size:13.5px;color:var(--ink-faint)}
+.faq p{color:var(--dim);font-size:14px;margin-top:.6rem;max-width:66ch}
+footer{border-top:1px solid var(--edge);padding:2rem 0 2.5rem}
+.foot{display:flex;justify-content:space-between;gap:1.2rem;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--faint)}
 .foot a:hover{color:var(--ink)}
 
-/* ═══ واکنش‌گرا ═══ */
-@media(max-width:980px){
-  .hero-grid,.gal-row,.dl-inner,.owner{grid-template-columns:1fr;gap:2.25rem}
-  .gal-row.flip .gal-text{order:0}
-  .feat{grid-template-columns:1fr 1fr}
+@media(max-width:1000px){
+  .dl-in{grid-template-columns:1fr;gap:1.9rem}
+  .boxes{grid-template-columns:repeat(3,1fr)}
   .nav-links{display:none}
-  .hero{padding-top:3rem}
 }
-@media(max-width:900px){.trio{grid-template-columns:1fr 1fr}}
-@media(max-width:620px){
-  .wrap{width:calc(100% - 2rem)}
-  .trio{grid-template-columns:1fr}
-  .feat{grid-template-columns:1fr}
-  .hero-cta{display:grid;grid-template-columns:1fr;gap:.6rem}
-  .hero-cta .btn{width:100%}
-  .hero-meta{display:grid;grid-template-columns:1fr 1fr;gap:.9rem 1rem}
-  .hero-meta div{min-width:0}
-  .nav{padding-inline:.2rem}
-  .feat-item{border-inline-start:0}
-  .dl-inner{padding:1.6rem}
-  section{padding:3rem 0}
-  .hero-meta{gap:1.1rem}
+@media(max-width:720px){
+  .boxes{grid-template-columns:repeat(2,1fr)}
+  .plates{grid-template-columns:1fr}
+  .wrap{width:calc(100% - 1.6rem)}
+  section{padding:2.75rem 0}
+  .hero{padding:2.5rem 0 3rem}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:.8rem 1rem}
+  .stats div{min-width:0}
+  .cta-row{display:grid;grid-template-columns:1fr}
+  .cta-row .btn{width:100%}
+  .dl-in{padding:1.5rem}
 }
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap nav">
-    <a class="brand" href="/">
-      <img src="/icon-mark.png" alt="">
-      جیم‌پرو
-    </a>
+    <a class="brand" href="/"><img src="/icon-mark.png" alt="جیم‌پرو">جیم‌پرو</a>
     <nav class="nav-links">
-      <a href="#features">قابلیت‌ها</a>
-      <a href="#screens">تصاویر برنامه</a>
+      <a href="#features">امکانات</a>
+      <a href="#screens">تصاویر</a>
       <a href="#download">دانلود</a>
-      <a href="#owner">پنل مالک</a>
       <a href="#faq">پرسش‌ها</a>
     </nav>
-    <a class="btn btn-primary btn-sm" href="#download">دانلود نسخهٔ ویندوز</a>
+    <a class="btn btn-primary btn-sm" href="#download">دانلود برای ویندوز</a>
   </div>
 </header>
 
-<!-- ═══════════ قهرمان ═══════════ -->
 <div class="hero">
-  <div class="hero-photo">
-    <img src="/img/f1.jpg" width="1600" height="1067" alt="سالن بدنسازی با دمبل و ورزشکار در حال تمرین">
-  </div>
-  <div class="wrap hero-grid">
-    <div>
-      <h1><span class="l">مدیریت باشگاه،</span><span class="l">بدون کاغذ</span><span class="l g">بدون اینترنت</span></h1>
-      <p class="hero-sub">
-        عضویت، قرارداد، قسط، کمد، بوفه و گزارش — در یک برنامهٔ ویندوز که کامل آفلاین کار می‌کند.
-        ورود و خروج اعضا با اثر انگشت، بارکد یا شمارهٔ عضویت ثبت می‌شود.
-      </p>
-      <div class="hero-cta">
+  <div class="hero-bg"><img src="/img/f1.jpg" width="1600" height="1067" alt=""></div>
+  <!--landing-notes-->
+  <div class="wrap">
+    <div class="hero-top">
+      <h1><span class="l" data-lx="hero1">مدیریت باشگاه،</span><span class="l" data-lx="hero2">ساده و</span><span class="l g" data-lx="hero3">آفلاین</span></h1>
+      <p class="lede" data-lx="lede">اعضا، قرارداد، اقساط، کمد، بوفه و گزارش در یک برنامهٔ ویندوز. ورود و خروج با اثر انگشت یا کارت عضو ثبت می‌شود.</p>
+      <div class="cta-row">
         <a class="btn btn-primary" href="#download">دانلود و نصب</a>
-        <a class="btn btn-ghost" href="#screens">دیدن تصاویر برنامه</a>
+        <a class="btn btn-ghost" href="#screens">تصاویر برنامه</a>
       </div>
-      <div class="hero-meta">
-        <div><b>۱۲</b>بخش کاری</div>
+      <div class="stats">
+        <div><b>۱۲</b>بخش</div>
         <div><b>۳</b>برند اثر انگشت</div>
-        <div><b>آفلاین</b>بدون ارسال داده</div>
+        <div><b>آفلاین</b>بدون سرور</div>
         <div><b>دائمی</b>لایسنس</div>
       </div>
     </div>
-    <div>
-      <figure class="shot-frame">
-        <img src="/img/app-dashboard.png" width="1264" height="781" alt="داشبورد جیم‌پرو: درآمد امروز، اعضای فعال و نمودار ماهانه">
-        <figcaption class="shot-tag">داشبورد — نمای مالک</figcaption>
-      </figure>
-    </div>
   </div>
+  <figure class="frame hero-frame">
+    <img src="/img/s-dashboard.png" width="1100" height="720" alt="داشبورد جیم‌پرو">
+  </figure>
 </div>
 
-<!-- ═══════════ قابلیت‌ها ═══════════ -->
 <section id="features">
   <div class="wrap">
     <div class="sec-head">
-      <p class="eyebrow">هر بخش، یک کار واقعی</p>
-      <h2>چیزی که هر روز لازم داری، همان‌جاست</h2>
-      <p>منوی برنامه به ترتیب کار روزانهٔ باشگاه چیده شده: عضو می‌آید، قرارداد می‌بندد، وارد می‌شود، پول می‌دهد و گزارش می‌ماند.</p>
+      <p class="eyebrow">۱۲ بخش</p>
+      <h2 data-lx="features-title">هر کار روزانهٔ باشگاه، یک بخش</h2>
+      <p data-lx="features-lede">منو به ترتیب کار روزانه چیده شده: عضو ثبت می‌شود، قرارداد می‌بندد، وارد می‌شود، پرداخت می‌کند.</p>
     </div>
 
-    <div class="feat">
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff0057" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><div class="n">۰۱ — اعضا</div></div>
-        <h3>عضویت و پروندهٔ عضو</h3>
-        <p>ساخت عضو با شمارهٔ عضویت، موبایل، عکس و یادداشت. کارت عضویت با QR و بارکد یک‌خطی — آمادهٔ چاپ.</p>
+    <div class="boxes">
+      <div class="box" style="--c:#ff0057">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.3 3.1-5.4 7-5.4s7 2.1 7 5.4"/></svg></div>
+        <h3>اعضا</h3><p>پروندهٔ عضو، شمارهٔ عضویت، کارت QR و بارکد.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a34eff" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6M16 13H8M16 17H8"/></svg><div class="n">۰۲ — قرارداد</div></div>
-        <h3>تعرفه، تمدید و فریز</h3>
-        <p>پلن‌های ۱ تا ۱۲ ماهه، تخفیف، فریز با سقف روز، لغو قرارداد و اقساط — همه با تاریخ شمسی.</p>
+      <div class="box" style="--c:#a34eff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M7 3h7l4 4v14H7z"/><path d="M10 9h5M10 13h5"/></svg></div>
+        <h3>قرارداد و تعرفه</h3><p>پلن ماهانه یا جلسه‌ای، تخفیف، فریز و اقساط.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#53a5ff" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg><div class="n">۰۳ — تردد</div></div>
-        <h3>ورود و خروج با اثر انگشت</h3>
-        <p>ZKTeco، Suprema و Futronic. دستگاه خودش پانچ می‌فرستد؛ ورود و خروج با ساعت خود دستگاه ثبت می‌شود.</p>
+      <div class="box" style="--c:#53a5ff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 3v5M12 16v5M4 12h5M15 12h5"/><circle cx="12" cy="12" r="2.6"/></svg></div>
+        <h3>تردد</h3><p>ورود و خروج با اثر انگشت، کارت یا شماره.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff0057" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><div class="n">۰۴ — کمدها</div></div>
-        <h3>اجارهٔ کمد با نمای کمد واقعی</h3>
-        <p>هر کمد یک درِ کمد با وضعیت آزاد، در اجاره یا خراب. اجاره، پایان اجاره و سپرده.</p>
+      <div class="box" style="--c:#ff0057">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M10 21V9"/></svg></div>
+        <h3>کمدها</h3><p>اجاره، پایان اجاره و سپرده.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a34eff" stroke-width="1.8"><path d="M3 6h18M6 6V4M18 6V4M6 10h12M8 14h8M10 18h4"/></svg><div class="n">۰۵ — مالی و صندوق</div></div>
-        <h3>پرداخت دستی، صندوق روز</h3>
-        <p>نقدی، کارت‌به‌کارت، چک و اقساط — بدون درگاه بانکی. بستن صندوق روز با فیش چاپی.</p>
+      <div class="box" style="--c:#a34eff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M7 6V4h10v2M8 12h4"/></svg></div>
+        <h3>مالی و صندوق</h3><p>نقدی، کارت‌به‌کارت، چک و اقساط.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#53a5ff" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 4 4-8"/></svg><div class="n">۰۶ — گزارش‌ها</div></div>
-        <h3>گزارش درآمد و تردد</h3>
-        <p>درآمد ماه، اعضای فعال، قراردادهای نزدیک انقضا و حضور روزانه — با نمودار و خروجی.</p>
+      <div class="box" style="--c:#53a5ff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 19V5M4 19h16"/><path d="M7 15l3.5-5 3.5 3 4-6"/></svg></div>
+        <h3>گزارش‌ها</h3><p>درآمد، حضور و قراردادهای نزدیک انقضا.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff0057" stroke-width="1.8"><path d="M4 4h16v12a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z"/><path d="M9 8h6M9 12h6"/></svg><div class="n">۰۷ — بوفه</div></div>
-        <h3>فروش بوفه با موجودی</h3>
-        <p>محصول، موجودی و فروش سریع. فروش به اعضا و مهمان، با ثبت در صندوق روز.</p>
+      <div class="box" style="--c:#ff0057">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M5 4h14v11a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h4"/></svg></div>
+        <h3>بوفه</h3><p>محصول، موجودی و فروش سریع.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a34eff" stroke-width="1.8"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 20h8M12 18v2"/></svg><div class="n">۰۸ — کیوسک</div></div>
-        <h3>نمایشگر دوم برای ورودی سالن</h3>
-        <p>صفحهٔ کیوسک با ساعت و پیام «کارت عضویت خود را اسکن کنید» روی تلویزیون یا مانیتور دوم.</p>
+      <div class="box" style="--c:#a34eff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6M12 17v4"/></svg></div>
+        <h3>کیوسک</h3><p>نمایشگر دوم برای ورودی سالن.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#53a5ff" stroke-width="1.8"><path d="M12 2l9 4v6c0 5-4 9-9 10-5-1-9-5-9-10V6z"/><path d="M9 12l2 2 4-4"/></svg><div class="n">۰۹ — لایسنس</div></div>
-        <h3>لایسنس دائمی + آپدیت ۱۲ ماهه</h3>
-        <p>فعال‌سازی آنلاین یک‌بار، بعد کاملاً آفلاین. به‌روزرسانی نسخه‌ها از داخل خود برنامه.</p>
+      <div class="box" style="--c:#53a5ff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 3l8 4v6c0 4.6-3.6 8-8 9-4.4-1-8-4.4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>لایسنس</h3><p>فعال‌سازی یک‌بار، بعد آفلاین.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff0057" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9l5 5z"/></svg><div class="n">۱۰ — پشتیبانی</div></div>
-        <h3>تیکت داخل برنامه</h3>
-        <p>کاربر از همان برنامه تیکت می‌فرستد و پاسخ را می‌گیرد؛ بدون ایمیل و بدون تماس.</p>
+      <div class="box" style="--c:#ff0057">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M20 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8l4 4z"/></svg></div>
+        <h3>پشتیبانی</h3><p>تیکت از داخل برنامه.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a34eff" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div class="n">۱۱ — کلاس و مربی</div></div>
-        <h3>برنامهٔ هفتگی کلاس‌ها</h3>
-        <p>کلاس در چند روز هفته با ظرفیت، مربی و ساعت. حذف و ویرایش هر کدام.</p>
+      <div class="box" style="--c:#a34eff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg></div>
+        <h3>کلاس و مربی</h3><p>برنامهٔ هفتگی چندروزه با ظرفیت.</p>
       </div>
-      <div class="feat-item">
-        <div class="h"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#53a5ff" stroke-width="1.8"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/></svg><div class="n">۱۲ — تنظیمات</div></div>
-        <h3>رنگ، فونت و رفتار برنامه</h3>
-        <p>تم روشن و تاریک، رنگ دلخواه، بارگذاری فونت فارسی و اندازهٔ متن. پشتیبان‌گیری خودکار.</p>
+      <div class="box" style="--c:#53a5ff">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
+        <h3>تنظیمات</h3><p>رنگ، فونت، اندازهٔ متن و پشتیبان.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════ نوار عکس ═══════════ -->
-<div class="band" aria-hidden="false">
-  <img src="/img/f3.jpg" width="1600" height="1067" alt="ورزشکار در حال آماده‌سازی برای ددلیفت با هالتر">
-  <div class="band-txt">
-    <div class="wrap">
-      <blockquote>باشگاه با کاغذ و دفتر<br>اداره نمی‌شود؛<br>با سیستمی اداره می‌شود<br>که هر روز بازش می‌کنی.</blockquote>
-      <cite>جیم‌پرو — برای باشگاه‌های واقعی، نه دمو</cite>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ تصاویر ═══════════ -->
-<section id="screens">
+<section id="screens" style="padding-top:1rem">
   <div class="wrap">
     <div class="sec-head">
-      <p class="eyebrow">همان چیزی که می‌بینی، همان چیزی است که نصب می‌شود</p>
-      <h2>تصاویر واقعی برنامه</h2>
-      <p>هیچ‌کدام رندر یا ماکت نیست؛ این‌ها عکس‌های گرفته‌شده از خود برنامه هستند.</p>
+      <p class="eyebrow">نمای برنامه</p>
+      <h2>داخل برنامه چه شکلی است</h2>
     </div>
 
-    <div class="trio" style="margin-bottom:2.5rem">
-      <figure><img src="/img/f2.jpg" width="1400" height="933" alt="تجهیزات باشگاه بدنسازی"><figcaption>سالن و دستگاه‌های آماده</figcaption></figure>
-      <figure><img src="/img/f4.jpg" width="1400" height="933" alt="وزنه‌های آزاد و تمرین با دمبل"><figcaption>وزنه و تمرین آزاد</figcaption></figure>
-      <figure><img src="/img/f5.jpg" width="1400" height="933" alt="تمرین زمینی با کشش شکم روی مت"><figcaption>پذیرش و ورود اعضا</figcaption></figure>
+    <div class="plates" style="margin-bottom:2.5rem">
+      <div class="plate" style="--c:#ff0057">
+        <div class="cap"><span></span>اعضا و وضعیت قرارداد</div>
+        <svg viewBox="0 0 320 128" fill="none" role="img" aria-label="طرح سادهٔ فهرست اعضا">
+          <rect x="1" y="1" width="318" height="126" rx="10" stroke="rgba(255,255,255,.12)"/>
+          <rect x="14" y="14" width="70" height="9" rx="4.5" fill="#ff0057" opacity=".85"/>
+          <rect x="92" y="14" width="44" height="9" rx="4.5" fill="rgba(255,255,255,.14)"/>
+          <rect x="253" y="12" width="53" height="13" rx="6.5" fill="#ff0057" opacity=".22"/>
+          <line x1="1" y1="36" x2="319" y2="36" stroke="rgba(255,255,255,.09)"/>
+          <circle cx="300" cy="52" r="7" fill="rgba(255,0,87,.45)"/><rect x="246" y="48" width="44" height="8" rx="4" fill="rgba(255,255,255,.36)"/><rect x="180" y="48" width="56" height="8" rx="4" fill="rgba(255,255,255,.2)"/><rect x="120" y="47" width="44" height="10" rx="5" fill="#0d6b3d" opacity=".5"/>
+          <circle cx="300" cy="76" r="7" fill="rgba(163,78,255,.45)"/><rect x="246" y="72" width="44" height="8" rx="4" fill="rgba(255,255,255,.36)"/><rect x="180" y="72" width="56" height="8" rx="4" fill="rgba(255,255,255,.2)"/><rect x="120" y="71" width="44" height="10" rx="5" fill="#0d6b3d" opacity=".5"/>
+          <circle cx="300" cy="100" r="7" fill="rgba(83,165,255,.45)"/><rect x="246" y="96" width="44" height="8" rx="4" fill="rgba(255,255,255,.36)"/><rect x="180" y="96" width="56" height="8" rx="4" fill="rgba(255,255,255,.2)"/><rect x="120" y="95" width="44" height="10" rx="5" fill="#8a4b00" opacity=".6"/>
+        </svg>
+      </div>
+
+      <div class="plate" style="--c:#53a5ff">
+        <div class="cap"><span></span>ثبت ورود و خروج</div>
+        <svg viewBox="0 0 320 128" fill="none" role="img" aria-label="طرح سادهٔ ورود با اثر انگشت">
+          <rect x="1" y="1" width="318" height="126" rx="10" stroke="rgba(255,255,255,.12)"/>
+          <circle cx="160" cy="50" r="24" stroke="#53a5ff" stroke-width="1.6" opacity=".5"/>
+          <circle cx="160" cy="50" r="15" stroke="#53a5ff" stroke-width="1.3" opacity=".8"/>
+          <path d="M160 39c5 0 9 4 9 9s-4 8-8 8" stroke="#53a5ff" stroke-width="1.4"/>
+          <rect x="88" y="88" width="144" height="11" rx="5.5" fill="rgba(83,165,255,.3)"/>
+          <rect x="124" y="106" width="72" height="8" rx="4" fill="rgba(255,255,255,.18)"/>
+          <path d="M40 42h26v40h-26zM280 42h-26v40h26z" stroke="rgba(255,255,255,.12)" stroke-dasharray="3 4"/>
+        </svg>
+      </div>
+
+      <div class="plate" style="--c:#a34eff">
+        <div class="cap"><span></span>کمدها</div>
+        <svg viewBox="0 0 320 128" fill="none" role="img" aria-label="طرح سادهٔ کمدها">
+          <rect x="1" y="1" width="318" height="126" rx="10" stroke="rgba(255,255,255,.12)"/>
+          <rect x="22" y="22" width="52" height="84" rx="5" fill="rgba(13,107,61,.28)" stroke="rgba(78,208,140,.5)"/>
+          <rect x="88" y="22" width="52" height="84" rx="5" fill="rgba(138,75,0,.3)" stroke="rgba(233,178,99,.55)"/>
+          <rect x="154" y="22" width="52" height="84" rx="5" fill="rgba(13,107,61,.28)" stroke="rgba(78,208,140,.5)"/>
+          <rect x="220" y="22" width="52" height="84" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.2)"/>
+          <g stroke="rgba(255,255,255,.32)"><path d="M40 36h16M40 42h16M40 48h16"/><path d="M106 36h16M106 42h16M106 48h16"/><path d="M172 36h16M172 42h16M172 48h16"/></g>
+          <rect x="66" y="60" width="4" height="14" rx="2" fill="rgba(255,255,255,.35)"/>
+          <rect x="132" y="60" width="4" height="14" rx="2" fill="rgba(255,255,255,.35)"/>
+        </svg>
+      </div>
+
+      <div class="plate" style="--c:#ff0057">
+        <div class="cap"><span></span>گزارش درآمد</div>
+        <svg viewBox="0 0 320 128" fill="none" role="img" aria-label="طرح سادهٔ گزارش درآمد">
+          <rect x="1" y="1" width="318" height="126" rx="10" stroke="rgba(255,255,255,.12)"/>
+          <path d="M24 100h272" stroke="rgba(255,255,255,.1)"/>
+          <g fill="#ff0057" opacity=".55">
+            <rect x="40" y="72" width="18" height="28" rx="4"/><rect x="76" y="56" width="18" height="44" rx="4"/>
+            <rect x="112" y="64" width="18" height="36" rx="4"/><rect x="148" y="44" width="18" height="56" rx="4"/>
+            <rect x="184" y="66" width="18" height="34" rx="4"/><rect x="220" y="52" width="18" height="48" rx="4"/>
+          </g>
+          <rect x="256" y="38" width="18" height="62" rx="4" fill="#a34eff" opacity=".85"/>
+          <path d="M28 40l40 10 36-16 36 22 36-30 36 8" stroke="#53a5ff" stroke-width="1.6" opacity=".7"/>
+        </svg>
+      </div>
     </div>
 
-    <div class="gallery">
-      <div class="gal-row">
-        <div class="gal-text">
-          <h3>اعضا با پروندهٔ کامل</h3>
-          <p>جستجوی سریع، وضعیت عضویت، تلفن و شمارهٔ عضویت. کارت عضویت با QR و بارکد برای چاپ و اسکن.</p>
-          <div class="gal-tags"><span class="tag">کارت QR + بارکد</span><span class="tag">خروجی PNG</span><span class="tag">چاپ مستقیم</span></div>
+    <div class="shots">
+      <div class="shot-row">
+        <div class="shot-txt">
+          <h3>اعضا و پرونده‌شان</h3>
+          <p>جستجو، وضعیت قرارداد، روزهای باقی‌مانده و کیف پول در یک جدول.</p>
+          <div class="chips"><span class="chip">کارت QR</span><span class="chip">بارکد</span><span class="chip">چاپ</span></div>
         </div>
-        <figure class="shot-frame">
-          <img src="/img/app-members.png" width="1264" height="781" alt="فهرست اعضا در جیم‌پرو">
-        </figure>
+        <figure class="frame"><img src="/img/s-members.png" width="1100" height="720" alt="فهرست اعضا"></figure>
       </div>
 
-      <div class="gal-row flip">
-        <div class="gal-text">
-          <h3>تردد، با اثر انگشت</h3>
-          <p>سه تب: حاضرین امروز، تاریخچه و دستگاه اثر انگشت. رکورد دستگاه با ساعت خودِ دستگاه ثبت می‌شود و ورود/خروج خودکار تشخیص داده می‌شود.</p>
-          <div class="gal-tags"><span class="tag">ZKTeco</span><span class="tag">Suprema</span><span class="tag">Futronic</span><span class="tag">ADMS</span></div>
-        </div>
-        <figure class="shot-frame">
-          <img src="/img/app-attendance.png" width="1264" height="781" alt="صفحهٔ تردد با تب دستگاه اثر انگشت">
-        </figure>
-      </div>
-
-      <div class="gal-row">
-        <div class="gal-text">
+      <div class="shot-row">
+        <div class="shot-txt">
           <h3>کمدها، مثل خود سالن</h3>
-          <p>هر کمد یک درِ کمد با رنگ وضعیت: آزاد، در اجاره، خراب. با یک کلیک اجاره، پایان اجاره یا ثبت خرابی.</p>
-          <div class="gal-tags"><span class="tag">اجاره و سپرده</span><span class="tag">شمارندهٔ آزاد/اجاره</span></div>
+          <p>هر کمد یک درِ کمد با وضعیت آزاد، در اجاره یا خراب.</p>
+          <div class="chips"><span class="chip">اجاره</span><span class="chip">سپرده</span></div>
         </div>
-        <figure class="shot-frame">
-          <img src="/img/app-lockers.png" width="1264" height="781" alt="نمای کمدهای باشگاه">
-        </figure>
+        <figure class="frame"><img src="/img/s-lockers.png" width="1100" height="720" alt="کمدها"></figure>
       </div>
 
-      <div class="gal-row flip">
-        <div class="gal-text">
-          <h3>لایسنس و آپدیت، شفاف</h3>
-          <p>نسخهٔ نصب‌شده، نسخهٔ موجود، تعداد دستگاه‌های مجاز و مدت اشتراک آپدیت — همه در یک صفحه.</p>
-          <div class="gal-tags"><span class="tag">فعال‌سازی آنلاین</span><span class="tag">آفلاین پس از فعال‌سازی</span></div>
+      <div class="shot-row">
+        <div class="shot-txt">
+          <h3>تردد با اثر انگشت</h3>
+          <p>رکورد با ساعت خودِ دستگاه ثبت می‌شود؛ ورود و خروج خودکار.</p>
+          <div class="chips"><span class="chip">ZKTeco</span><span class="chip">Suprema</span><span class="chip">Futronic</span></div>
         </div>
-        <figure class="shot-frame">
-          <img src="/img/app-license.png" width="1264" height="781" alt="صفحهٔ لایسنس جیم‌پرو">
-        </figure>
+        <figure class="frame"><img src="/img/s-attendance.png" width="1100" height="720" alt="تردد"></figure>
+      </div>
+
+      <div class="shot-row">
+        <div class="shot-txt">
+          <h3>گزارش‌ها و صندوق</h3>
+          <p>درآمد ماه، اعضای فعال و بستن صندوق روز با فیش چاپی.</p>
+          <div class="chips"><span class="chip">نمودار</span><span class="chip">فیش چاپی</span></div>
+        </div>
+        <figure class="frame"><img src="/img/s-reports.png" width="1100" height="720" alt="گزارش‌ها"></figure>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════ دانلود ═══════════ -->
 <section id="download">
   <div class="wrap">
     <div class="dl">
-      <div class="dl-inner">
+      <div class="dl-in">
         <div>
-          <p class="eyebrow">نسخهٔ ویندوز — ۶۴ بیتی</p>
-          <h2>دانلود جیم‌پرو</h2>
-          <p>
-            نصب‌کنندهٔ ویندوز ۱۰ و ۱۱. نصب برای کاربر جاری انجام می‌شود و به دسترسی مدیر نیاز ندارد.
-            داده‌های باشگاه در پوشهٔ کاربر ذخیره می‌شود و با حذف برنامه پاک نمی‌شود.
-          </p>
-          <div class="hero-cta">
+          <p class="eyebrow">ویندوز ۱۰ و ۱۱ — ۶۴ بیتی</p>
+          <h2 data-lx="download-title">دانلود جیم‌پرو</h2>
+          <p data-lx="download-lede">نصب برای کاربر جاری، بدون نیاز به دسترسی مدیر. داده‌های باشگاه در پوشهٔ کاربر می‌ماند و با حذف برنامه پاک نمی‌شود.</p>
+          <div class="cta-row">
             <a class="btn btn-primary" id="dl-btn" href="/download/GymPro-Setup.exe">دانلود نصب‌کننده</a>
-            <a class="btn btn-ghost" href="/download/info.json" id="sha-link" target="_blank" rel="noopener">مشخصات نسخه (JSON)</a>
+            <a class="btn btn-ghost" href="/download/info.json" id="sha-link">چک‌سام SHA-256</a>
           </div>
-          <div class="req">
-            <span>ویندوز ۱۰/۱۱ (64-bit)</span>
-            <span>بدون نیاز به .NET</span>
-            <span>کار کامل آفلاین</span>
-          </div>
+          <div class="need"><span>بدون پیش‌نیاز</span><span>کار کامل آفلاین</span><span>نصب per-user</span></div>
         </div>
-        <div class="dl-file">
-          <p class="dl-file-head">مشخصات فایل</p>
-          <div class="row"><span>نام فایل</span><b id="dl-name" dir="ltr">GymPro-Setup.exe</b></div>
-          <div class="row"><span>نسخه</span><b id="dl-ver" dir="ltr">—</b></div>
-          <div class="row"><span>حجم</span><b id="dl-size" dir="ltr">—</b></div>
-          <div class="row"><span>تاریخ انتشار</span><b id="dl-date">—</b></div>
-          <div class="row"><span>سیستم</span><b>ویندوز ۱۰/۱۱ — ۶۴ بیتی</b></div>
-          <div class="row"><span>نوع نصب</span><b>per-user (بدون دسترسی مدیر)</b></div>
+        <div class="spec">
+          <p class="t">مشخصات فایل</p>
+          <div class="r"><span>نام فایل</span><b id="dl-name" dir="ltr">GymPro-Setup.exe</b></div>
+          <div class="r"><span>نسخه</span><b id="dl-ver" dir="ltr">—</b></div>
+          <div class="r"><span>حجم</span><b id="dl-size" dir="ltr">—</b></div>
+          <div class="r"><span>تاریخ</span><b id="dl-date">—</b></div>
+          <div class="r"><span>نوع نصب</span><b>per-user</b></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════ پنل مالک ═══════════ -->
-<section id="owner">
-  <div class="wrap owner">
-    <div>
-      <p class="eyebrow">فقط یک نفر</p>
-      <h2 style="font-size:clamp(1.5rem,2.6vw,2.05rem);font-weight:800;margin:.6rem 0 1rem;line-height:1.35">پنل مدیریت، فقط برای مالک نرم‌افزار</h2>
-      <p style="color:var(--ink-dim);font-size:15.5px;max-width:42ch">
-        سرور لایسنس، تیکت‌های پشتیبانی و انتشار نسخه‌ها همه پشت یک ورود هستند و هیچ حساب دیگری ساخته نمی‌شود.
-        فروشندهٔ لایسنس (مالک نرم‌افزار) از همان‌جا کلید می‌سازد، دستگاه را آزاد می‌کند و نسخهٔ جدید منتشر می‌کند.
-      </p>
-      <a class="btn btn-primary" href="/login" style="margin-top:1.5rem">ورود مالک</a>
-    </div>
-    <div class="lock">
-      <div class="lock-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div><b>یک حساب، بدون ثبت‌نام</b>هیچ مسیر ساخت کاربر یا تغییر نقش وجود ندارد؛ رمز فقط با بازسازی فایل مدیر عوض می‌شود.</div>
-      </div>
-      <div class="lock-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2l8 4v6c0 5-4 9-8 10-4-1-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
-        <div><b>لایسنس و اسلات دستگاه</b>ساخت کلید، نسخه (پایه/حرفه‌ای/سازمانی)، اشتراک آپدیت و آزاد کردن دستگاه فعال.</div>
-      </div>
-      <div class="lock-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9l5 5z"/></svg>
-        <div><b>تیکت‌ها</b>پاسخ به تیکت مشتری از همان پنل؛ مشتری پاسخ را داخل برنامه می‌بیند.</div>
-      </div>
-      <div class="lock-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg>
-        <div><b>انتشار نسخه</b>آپلود نصب‌کننده، امضای Ed25519 و انتشار مانیفست؛ برنامه‌های نصب‌شده خودشان خبردار می‌شوند.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════ پرسش‌ها ═══════════ -->
-<section id="faq">
+<section id="faq" style="padding-top:1rem">
   <div class="wrap">
-    <div class="sec-head">
-      <p class="eyebrow">پیش از خرید</p>
-      <h2>پرسش‌های رایج</h2>
-    </div>
+    <div class="sec-head"><p class="eyebrow">پیش از خرید</p><h2 data-lx="faq-title">پرسش‌های رایج</h2></div>
     <div class="faq">
       <details>
-        <summary><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>برای کار کردن به اینترنت نیاز دارد؟</summary>
-        <p>نه. برنامه کامل آفلاین است. اینترنت فقط برای دو کار لازم می‌شود: فعال‌سازی اولیهٔ لایسنس و دریافت به‌روزرسانی. هر دو اختیاری و یک‌باره هستند.</p>
+        <summary><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>به اینترنت نیاز دارد؟</summary>
+        <p>نه. برنامه کامل آفلاین است. اینترنت فقط برای فعال‌سازی اولیهٔ لایسنس و دریافت به‌روزرسانی لازم می‌شود، هر دو یک‌باره.</p>
       </details>
       <details>
-        <summary><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>لایسنس چه مدلی است؟</summary>
-        <p>لایسنس دائمی است؛ برنامه برای همیشه کار می‌کند. همراه آن ۱۲ ماه اشتراک به‌روزرسانی می‌گیرید که پس از آن برنامه متوقف نمی‌شود، فقط نسخه‌های جدید را دریافت نمی‌کنید.</p>
+        <summary><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>لایسنس چه مدلی است؟</summary>
+        <p>لایسنس دائمی؛ برنامه برای همیشه کار می‌کند. همراه آن ۱۲ ماه اشتراک به‌روزرسانی می‌گیرید و پس از آن برنامه متوقف نمی‌شود.</p>
       </details>
       <details>
-        <summary><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>چه دستگاه اثر انگشتی پشتیبانی می‌شود؟</summary>
-        <p>ZKTeco (TCP 4370 و مدل‌های ADMS/iClock)، Suprema BioStar 2 و Futronic. اثر انگشت روی خود دستگاه ثبت می‌شود؛ جیم‌پرو فقط زمان ورود و خروج را می‌گیرد و هیچ تصویر یا تمپلیت انگشت ذخیره نمی‌کند.</p>
+        <summary><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>چه دستگاه اثر انگشتی پشتیبانی می‌شود؟</summary>
+        <p>ZKTeco (TCP 4370 و ADMS)، Suprema BioStar 2 و Futronic. اثر انگشت روی خود دستگاه ثبت می‌شود و هیچ تصویر یا تمپلیت انگشتی در برنامه ذخیره نمی‌شود.</p>
       </details>
       <details>
-        <summary><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>داده‌های باشگاه کجا ذخیره می‌شود؟</summary>
-        <p>در پوشهٔ کاربر روی همان کامپیوتر. هیچ داده‌ای به سرور فرستاده نمی‌شود و هیچ ابزار تحلیلی یا ردیاب در برنامه نیست. پشتیبان‌گیری خودکار روزانه و دستی دارد.</p>
-      </details>
-      <details>
-        <summary><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>روی چند کامپیوتر نصب می‌شود؟</summary>
-        <p>تعداد دستگاه در لایسنس مشخص است. اگر به دستگاه بیشتری نیاز داشتید، اسلات اضافه می‌شود.</p>
+        <summary><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>داده‌ها کجا ذخیره می‌شود؟</summary>
+        <p>در پوشهٔ کاربر روی همان کامپیوتر. هیچ داده‌ای به بیرون فرستاده نمی‌شود و هیچ ابزار تحلیلی در برنامه نیست. پشتیبان روزانه خودکار دارد.</p>
       </details>
     </div>
   </div>
@@ -503,41 +398,26 @@ footer{border-top:1px solid var(--edge);padding:2.5rem 0 3rem}
 
 <footer>
   <div class="wrap foot">
-    <div style="display:flex;align-items:center;gap:.55rem">
-      <img src="/icon-mark-sm.png" alt="" style="height:22px">
-      <span>جیم‌پرو — نرم‌افزار مدیریت باشگاه</span>
-    </div>
-    <div style="display:flex;gap:1.25rem">
-      <a href="#download">دانلود</a>
-      <a href="/login">ورود مالک</a>
-      <a href="#faq">پرسش‌ها</a>
-    </div>
+    <div style="display:flex;align-items:center;gap:.5rem"><img src="/icon-mark-sm.png" alt="" style="height:20px">جیم‌پرو</div>
+    <div style="display:flex;gap:1.1rem"><a href="#download">دانلود</a><a href="#faq">پرسش‌ها</a></div>
   </div>
 </footer>
 
 <script>
-// خواندن اطلاعات نسخهٔ منتشرشده از همان سروری که پنل را سرو می‌کند
 (async () => {
-  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
   try {
-    const res = await fetch('/download/info.json', { cache: 'no-store' });
-    if (!res.ok) return;
-    const info = await res.json();
-    if (!info.filename) return;
-    const btn = document.getElementById('dl-btn');
-    if (btn) btn.href = `/download/${info.filename}`;
-    const link = document.getElementById('sha-link');
-    if (link && info.sha256) {
-      link.href = `/download/${info.filename}.sha256`;
-      link.textContent = 'چک‌سام SHA-256';
-      link.target = '_blank';
-    }
-    set('dl-name', info.filename);
-    set('dl-ver', info.version || '—');
-    set('dl-size', info.size ? (info.size / 1048576).toFixed(0) + ' مگابایت' : '—');
-    set('dl-date', info.date || '—');
-    set('dl-sha', info.sha256 || '—');
-  } catch { /* صفحه بدون داده هم کار می‌کند */ }
+    const r = await fetch('/download/info.json', { cache: 'no-store' });
+    if (!r.ok) return;
+    const i = await r.json();
+    if (!i.filename) return;
+    const btn = document.getElementById('dl-btn'); if (btn) btn.href = `/download/${i.filename}`;
+    const sha = document.getElementById('sha-link');
+    if (sha && i.sha256) { sha.href = `/download/${i.filename}.sha256`; sha.target = '_blank'; sha.rel = 'noopener'; }
+    set('dl-name', i.filename); set('dl-ver', i.version || '—');
+    set('dl-size', i.size ? (i.size / 1048576).toFixed(0) + ' مگابایت' : '—');
+    set('dl-date', i.date || '—');
+  } catch {}
 })();
 </script>
 </body>
