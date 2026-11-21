@@ -1,5 +1,5 @@
 // پل نازک بین IPC و درایور اثر انگشت — تا ipc.ts به کتابخانهٔ سخت‌افزار وابسته نباشد
-import { devices, punches, syncAll, syncDevice, simulatePunch, testConnection, userMap, devicesForEnrollment } from './biometric';
+import { devices, punches, syncAll, syncDevice, simulatePunch, testConnection, userMap, devicesForEnrollment, unenrolled } from './biometric';
 
 export const bioDevices = {
   list: () => devices.list(),
@@ -36,11 +36,12 @@ export const bioDevices = {
   simulate: (p: { deviceId: string; userNo: string; direction?: 'in' | 'out' | null }) => simulatePunch(p.deviceId, p.userNo, p.direction ?? null),
   punches: (p: { deviceId?: string; limit?: number }) => punches(p),
   enrollment: () => devicesForEnrollment(),
+  unenrolled: (deviceId: string) => unenrolled(deviceId),
 };
 
 export const bioUserMap = {
   list: (deviceId?: string) => userMap.list(deviceId),
-  add: (p: { deviceId: string; userNo: string; memberId: string }) => userMap.add(p.deviceId, String(p.userNo), p.memberId),
+  add: (p: { deviceId: string; userNo: string; memberId: string }, userId: string | null = null) => userMap.add(p.deviceId, String(p.userNo), p.memberId, userId),
   remove: (id: string) => userMap.remove(id),
 };
 

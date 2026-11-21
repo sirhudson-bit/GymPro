@@ -6,12 +6,13 @@ import { api } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import { Badge, Button, Empty, Field, Modal, Table, TextArea, TextInput } from '@/components/ui';
 import { formatJalali, toPersianDigits } from '@/lib/format';
+import BioDevices from '@/components/views/BioDevices';
 
 export default function Attendance() {
   const toast = useStore((s) => s.toast);
   const [rows, setRows] = useState<any[]>([]);
   const [present, setPresent] = useState(0);
-  const [tab, setTab] = useState<'today' | 'history'>('today');
+  const [tab, setTab] = useState<'today' | 'history' | 'bio'>('today');
   const [scan, setScan] = useState('');
   const [override, setOverride] = useState<{ memberId: string; message: string } | null>(null);
   const [reason, setReason] = useState('');
@@ -71,6 +72,24 @@ export default function Attendance() {
 
   return (
     <div className="space-y-3">
+      {/* نوار تب‌ها همیشه بالاست تا از هر تب به تب دیگر برگشت ممکن باشد */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--edge)' }}>
+          {([['today', 'حاضرین امروز'], ['history', 'تاریخچه'], ['bio', 'دستگاه اثر انگشت']] as const).map(([k, label]) => (
+            <button key={k} onClick={() => setTab(k)} className="px-3 py-1.5 text-[12.5px]" aria-pressed={tab === k}
+              style={{ background: tab === k ? 'var(--brand)' : 'transparent', color: tab === k ? 'var(--brand-ink)' : 'var(--ink)', fontWeight: tab === k ? 700 : 500 }}>{label}</button>
+          ))}
+        </div>
+        {tab !== 'bio' ? <Badge tone="ok">{toPersianDigits(present)} نفر حاضر</Badge> : null}
+        <div className="flex-1" />
+        {tab !== 'bio' ? <Button variant="ghost" onClick={load}>بازخوانی</Button> : null}
+      </div>
+
+      {tab === 'bio' ? (
+        <BioDevices />
+      ) : (
+      <>
+      {tab !== 'bio' ? (
       <div className="card p-4">
         <form onSubmit={submitScan} className="flex items-end gap-2">
           <div className="flex-1">
@@ -81,18 +100,7 @@ export default function Attendance() {
           <Button type="submit" icon={<ScanLine size={15} />}>ثبت ورود (F4)</Button>
         </form>
       </div>
-
-      <div className="flex items-center gap-2">
-        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--edge)' }}>
-          {([['today', 'حاضرین امروز'], ['history', 'تاریخچه']] as const).map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} className="px-3 py-1.5 text-[12.5px]" aria-pressed={tab === k}
-              style={{ background: tab === k ? 'var(--brand)' : 'transparent', color: tab === k ? 'var(--brand-ink)' : 'var(--ink)', fontWeight: tab === k ? 700 : 500 }}>{label}</button>
-          ))}
-        </div>
-        <Badge tone="ok">{toPersianDigits(present)} نفر حاضر</Badge>
-        <div className="flex-1" />
-        <Button variant="ghost" onClick={load}>بازخوانی</Button>
-      </div>
+      ) : null}
 
       <Table head={['عضو', 'زمان ورود', 'زمان خروج', 'روش', '']} empty={rows.length === 0}>
         {rows.map((c) => (
@@ -102,7 +110,7 @@ export default function Attendance() {
             <td className="td">{c.checked_out_at ? formatJalali(c.checked_out_at, { withTime: true }) : '—'}</td>
             <td className="td">
               <div className="flex items-center gap-1">
-                <span>{c.method === 'barcode' ? 'بارکد' : c.method === 'qr_webcam' ? 'QR وبکم' : c.method === 'kiosk' ? 'کیوسک' : 'دستی'}</span>
+                <span>{c.method === 'barcode' ? 'بارکد' : c.method === 'qr_webcam' ? 'QR وبکم' : c.method === 'kiosk' ? 'کیوسک' : c.method === 'fingerprint' ? 'اثر انگشت' : 'دستی'}</span>
                 {c.is_override ? <Badge tone="warn">ارفاقی</Badge> : null}
               </div>
             </td>
@@ -135,6 +143,8 @@ export default function Attendance() {
           <TextArea value={reason} onChange={setReason} rows={2} placeholder="مثلاً: تسویه نکرده اما مدیر اجازه داد" />
         </Field>
       </Modal>
+      </>
+      )}
     </div>
   );
 }

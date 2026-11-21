@@ -555,14 +555,15 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
     },
     'bio:punches': (p) => bioDevices.punches({ deviceId: p?.deviceId ? String(p.deviceId) : undefined, limit: Number(p?.limit ?? 200) }),
     'bio:enrollment': () => bioDevices.enrollment(),
+    'bio:unenrolled': (p) => bioDevices.unenrolled(String(p.deviceId)),
     'bio:admsStatus': async () => {
       const { admsStatus, admsSeen } = await import('./adms');
       return { ...admsStatus(), seen: admsSeen() };
     },
     'bio:mapList': (p) => bioUserMap.list(p?.deviceId ? String(p.deviceId) : undefined),
     'bio:mapAdd': (p) => {
-      role('owner', 'manager');
-      return bioUserMap.add({ deviceId: String(p.deviceId), userNo: String(p.userNo), memberId: String(p.memberId) });
+      const u = auth();
+      return bioUserMap.add({ deviceId: String(p.deviceId), userNo: String(p.userNo), memberId: String(p.memberId) }, u.id);
     },
     'bio:mapRemove': (p) => {
       role('owner', 'manager');

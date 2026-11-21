@@ -494,11 +494,22 @@ export const userMap = {
       ...params,
     );
   },
-  add(deviceId: string, deviceUserNo: string, memberId: string) {
+  add(deviceId: string, deviceUserNo: string, memberId: string, userId: string | null = null) {
     const dup = row('SELECT id FROM bio_user_map WHERE device_id = ? AND device_user_no = ?', deviceId, deviceUserNo);
     if (dup) throw new Error('این شناسه روی همین دستگاه قبلاً به عضوی وصل شده است');
+    const already = row('SELECT id FROM bio_user_map WHERE device_id = ? AND member_id = ?', deviceId, memberId);
+    if (already) throw new Error('این عضو روی همین دستگاه قبلاً ثبت شده است');
     const id = uuidv7();
-    db().run('INSERT INTO bio_user_map (id, branch_id, device_id, device_user_no, member_id) VALUES (?,?,?,?,?)', id, db().branchId, deviceId, deviceUserNo, memberId);
+    db().run(
+      'INSERT INTO bio_user_map (id, branch_id, device_id, device_user_no, member_id, enrolled_at, enrolled_by) VALUES (?,?,?,?,?,?,?)',
+      id,
+      db().branchId,
+      deviceId,
+      deviceUserNo,
+      memberId,
+      nowIso(),
+      userId,
+    );
     return { ok: true, id };
   },
   remove(id: string) {
@@ -529,4 +540,17 @@ export function devicesForEnrollment() {
 export function applyAdmsPunch(deviceId: string, punch: Punch) {
   const device = devices.get(deviceId);
   return applyPunch(device, punch, null);
+}
+
+/** اعضایی که روی این دستگاه اثر انگشت ندارند (برای ثبت) */
+export function unenrolled(deviceId: string) {
+  return rows(
+    `SELECT m.id, m.full_name AS fullName, m.member_no AS memberNo, m.mobile, m.status
+     FROM members m
+     WHERE m.branch_id = ? AND m.deleted_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM bio_user_map u WHERE u.device_id = ? AND u.member_id = m.id)
+     ORDER BY m.member_no LIMIT 500`,
+    db().branchId,
+    deviceId,
+  );
 }

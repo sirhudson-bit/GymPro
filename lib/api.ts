@@ -123,6 +123,7 @@ export const api = {
   bioSimulate: (p: unknown) => call('bio:simulate', p),
   bioPunches: (p?: unknown) => call('bio:punches', p ?? {}),
   bioEnrollment: () => call('bio:enrollment'),
+  bioUnenrolled: (deviceId: string) => call('bio:unenrolled', { deviceId }),
   bioAdmsStatus: () => call('bio:admsStatus'),
   bioMapList: (deviceId?: string) => call('bio:mapList', deviceId ? { deviceId } : {}),
   bioMapAdd: (p: unknown) => call('bio:mapAdd', p),

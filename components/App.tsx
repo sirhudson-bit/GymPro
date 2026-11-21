@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   LayoutDashboard, Users, FileSignature, Wallet, ScanLine, MonitorSmartphone, ShoppingBasket,
   CalendarClock, KeyRound, BarChart3, LifeBuoy, Settings as SettingsIcon, ShieldCheck, BookOpen,
-  Sun, Moon, LogOut, CheckCircle2, AlertTriangle, XCircle, ArrowLeft, ArrowRight, X, Fingerprint,
+  Sun, Moon, LogOut, CheckCircle2, AlertTriangle, XCircle, ArrowLeft, ArrowRight, X,
 } from 'lucide-react';
 import { api, hasApi } from '@/lib/api';
 import { useStore, initTheme, type ViewKey } from '@/lib/store';
@@ -21,7 +21,6 @@ import Kiosk from '@/components/views/Kiosk';
 import Pos from '@/components/views/Pos';
 import Classes from '@/components/views/Classes';
 import Lockers from '@/components/views/Lockers';
-import BioDevices from '@/components/views/BioDevices';
 import Reports from '@/components/views/Reports';
 import Support from '@/components/views/Support';
 import SettingsView from '@/components/views/Settings';
@@ -38,7 +37,6 @@ const NAV: { key: ViewKey; label: string; icon: any; roles?: string[] }[] = [
   { key: 'pos', label: 'بوفه', icon: ShoppingBasket },
   { key: 'classes', label: 'کلاس و مربی', icon: CalendarClock },
   { key: 'lockers', label: 'کمدها', icon: KeyRound },
-  { key: 'biometric', label: 'اثر انگشت', icon: Fingerprint, roles: ['owner', 'manager'] },
 
   { key: 'reports', label: 'گزارش‌ها', icon: BarChart3, roles: ['owner', 'manager'] },
   { key: 'support', label: 'پشتیبانی', icon: LifeBuoy },
@@ -537,7 +535,6 @@ export default function App() {
           {view === 'pos' ? <Pos /> : null}
           {view === 'classes' ? <Classes /> : null}
           {view === 'lockers' ? <Lockers /> : null}
-          {view === 'biometric' ? <BioDevices /> : null}
           {view === 'reports' ? <Reports /> : null}
           {view === 'support' ? <Support /> : null}
           {view === 'settings' ? <SettingsView onPortableWarning={setPortableWarning} /> : null}

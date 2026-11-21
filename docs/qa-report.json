@@ -4,7 +4,7 @@
     "issues": [],
     "counts": {
       "interactive": 19,
-      "textNodes": 57
+      "textNodes": 56
     }
   },
   "members": {
@@ -12,15 +12,15 @@
     "issues": [],
     "counts": {
       "interactive": 23,
-      "textNodes": 41
+      "textNodes": 42
     }
   },
   "contracts": {
     "url": "#/contracts",
     "issues": [],
     "counts": {
-      "interactive": 23,
-      "textNodes": 40
+      "interactive": 26,
+      "textNodes": 49
     }
   },
   "finance": {
@@ -35,8 +35,8 @@
     "url": "#/attendance",
     "issues": [],
     "counts": {
-      "interactive": 21,
-      "textNodes": 38
+      "interactive": 22,
+      "textNodes": 48
     }
   },
   "kiosk": {
@@ -99,8 +99,8 @@
     "url": "#/settings",
     "issues": [],
     "counts": {
-      "interactive": 42,
-      "textNodes": 58
+      "interactive": 48,
+      "textNodes": 70
     }
   },
   "help": {
