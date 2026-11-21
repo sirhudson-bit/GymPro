@@ -48,8 +48,9 @@ body {
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: Vazirmatn, Tahoma, sans-serif;
-  font-size: 14px;
+  /* --app-font را lib/font.ts ست می‌کند (فونت آماده، سیستمی یا بارگذاری‌شده) */
+  font-family: var(--app-font, Vazirmatn), Vazirmatn, Tahoma, sans-serif;
+  font-size: calc(14px * var(--app-font-scale, 1));
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }

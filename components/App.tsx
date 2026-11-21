@@ -10,6 +10,7 @@ import { api, hasApi, onEvent } from '@/lib/api';
 import { useStore, initTheme, type ViewKey } from '@/lib/store';
 import { Button, Field, TextInput, Spinner } from '@/components/ui';
 import { toPersianDigits } from '@/lib/format';
+import { applyFont, cacheFont, CUSTOM_FAMILY, BUILTIN_FONTS, type FontState } from '@/lib/font';
 
 import Dashboard from '@/components/views/Dashboard';
 import ForgotPassword from '@/components/views/ForgotPassword';
@@ -388,6 +389,33 @@ export default function App() {
       unsub();
       window.removeEventListener('gp:update-state', onLocal);
     };
+  }, []);
+
+  /* فونت: وضعیت واقعی از main، حتی اگر کش مرورگر قدیمی باشد
+     (مثلاً فونت بارگذاری‌شده که کش هنوز فونت قبلی را دارد) */
+  useEffect(() => {
+    if (!hasApi()) return;
+    api
+      .fontState()
+      .then((st: any) => {
+        let next: FontState;
+        if (st?.active && st?.url) {
+          next = { kind: 'custom', family: CUSTOM_FAMILY, label: st.label || 'فونت سفارشی', url: st.url, scale: Number(st.scale ?? 1) };
+        } else {
+          const savedId = (() => {
+            try {
+              return localStorage.getItem('gp.fontChoice') ?? 'vazirmatn';
+            } catch {
+              return 'vazirmatn';
+            }
+          })();
+          const choice = BUILTIN_FONTS.find((f) => f.id === savedId) ?? BUILTIN_FONTS[0];
+          next = { kind: 'builtin', family: choice.family, label: choice.label, scale: Number(st.scale ?? 1) };
+        }
+        applyFont(next);
+        cacheFont(next);
+      })
+      .catch(() => {});
   }, []);
 
   /* نسخه از main می‌آید تا با فایل نصبی یکی باشد */

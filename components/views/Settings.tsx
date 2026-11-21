@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Copy, Database, Download, DownloadCloud, FolderOpen, GitBranch, HardDriveDownload, KeyRound, Plus, RefreshCw, ShieldCheck, UserPlus } from 'lucide-react';
+import { CheckCircle2, Copy, Database, Download, DownloadCloud, FolderOpen, GitBranch, HardDriveDownload, KeyRound, Plus, RefreshCw, ShieldCheck, Type, Upload, UserPlus, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import { ACCENT_PRESETS, DEFAULT_ACCENT, deriveAccent } from '@/lib/theme';
 import { Badge, Button, Empty, Field, Modal, Row, Section, Select, Table, TextInput, Toggle } from '@/components/ui';
 import { formatJalali, toPersianDigits } from '@/lib/format';
+import { applyFont, BUILTIN_FONTS, cacheFont, CUSTOM_FAMILY, readCachedFont, type FontState } from '@/lib/font';
 
 export default function Settings({ onPortableWarning }: { onPortableWarning?: (v: boolean) => void }) {
   const toast = useStore((s) => s.toast);
@@ -124,6 +125,10 @@ export default function Settings({ onPortableWarning }: { onPortableWarning?: (v
           />
           <p className="text-[12px]" style={{ color: 'var(--muted)' }}>برای خروج کامل، از منوی سینی سیستم «خروج» را بزنید.</p>
         </div>
+      </Section>
+
+      <Section title="فونت برنامه" defaultOpen={false}>
+        <FontPanel toast={toast} />
       </Section>
 
       <Section title="اتصال به سرورها (اختیاری)" defaultOpen={false}>
@@ -325,6 +330,273 @@ export default function Settings({ onPortableWarning }: { onPortableWarning?: (v
           <Field label="رمز عبور" required><TextInput id="nu-pass" type="password" dir="ltr" style={{ textAlign: 'right' }} aria-label="رمز عبور" /></Field>
           <Field label="PIN (۴ رقم)"><TextInput id="nu-pin" dir="ltr" style={{ textAlign: 'right' }} aria-label="PIN" /></Field>
         </div>
+      </Modal>
+    </div>
+  );
+}
+
+/* ─────────── فونت برنامه ─────────── */
+
+function FontPanel({ toast }: { toast: (m: string, t?: 'ok' | 'bad') => void }) {
+  const [state, setState] = useState<any>(null);
+  const [scale, setScale] = useState(1);
+  const [busy, setBusy] = useState('');
+  const [preview, setPreview] = useState('');
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const st: any = await api.fontState();
+      setState(st);
+      setScale(Number(st?.scale ?? 1));
+      if (st?.active) {
+        setPreview(CUSTOM_FAMILY);
+      } else {
+        const savedId = (() => {
+          try {
+            return localStorage.getItem('gp.fontChoice') ?? 'vazirmatn';
+          } catch {
+            return 'vazirmatn';
+          }
+        })();
+        const choice = BUILTIN_FONTS.find((f) => f.id === savedId) ?? BUILTIN_FONTS[0];
+        setPreview(choice.family);
+        /* فونت انتخاب‌شده را حتی پس از بازخوانی صفحه اعمال کن */
+        const next: FontState = { kind: 'builtin', family: choice.family, label: choice.label, scale: Number(st?.scale ?? 1) };
+        applyFont(next);
+        cacheFont(next);
+      }
+    } catch (e: any) {
+      toast(e.message, 'bad');
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  /** اعمال و ذخیرهٔ انتخاب فونت آماده/سیستمی */
+  const pick = async (choice: { id: string; family: string }) => {
+    const next: FontState = { kind: 'builtin', family: choice.family, label: choice.family, scale };
+    applyFont(next);
+    cacheFont(next);
+    try {
+      localStorage.setItem('gp.fontChoice', choice.id);
+    } catch {
+      /* ignore */
+    }
+    setPreview(choice.family);
+    await api.setSetting('ui.fontFamily', choice.family);
+    toast(`فونت روی «${choice.family}» تنظیم شد`);
+  };
+
+  /** بارگذاری فایل فونت از دیسک */
+  const upload = async () => {
+    setBusy('upload');
+    try {
+      const res: any = await api.fontUpload();
+      if (res?.canceled) return;
+      const next: FontState = { kind: 'custom', family: CUSTOM_FAMILY, label: res.label || 'فونت سفارشی', url: res.url, scale };
+      applyFont(next);
+      cacheFont(next);
+      try {
+        localStorage.removeItem('gp.fontChoice');
+      } catch {
+        /* ignore */
+      }
+      setPreview(CUSTOM_FAMILY);
+      await load();
+      toast(`فونت «${res.label}» بارگذاری شد`);
+    } catch (e: any) {
+      toast(e.message, 'bad');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  /** حذف فونت بارگذاری‌شده و بازگشت به وزیرمتن */
+  const reset = async () => {
+    setBusy('reset');
+    try {
+      await api.fontReset();
+      const def = BUILTIN_FONTS[0];
+      const next: FontState = { kind: 'builtin', family: def.family, label: def.label, scale };
+      applyFont(next);
+      cacheFont(next);
+      try {
+        localStorage.setItem('gp.fontChoice', def.id);
+      } catch {
+        /* ignore */
+      }
+      setPreview(def.family);
+      await load();
+      toast('فونت به «وزیرمتن» برگشت');
+    } catch (e: any) {
+      toast(e.message, 'bad');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  /** اندازهٔ متن — همان لحظه اعمال می‌شود */
+  const changeScale = async (value: number) => {
+    setScale(value);
+    const next: FontState = state?.active
+      ? { kind: 'custom', family: CUSTOM_FAMILY, label: state.label, url: state.url, scale: value }
+      : { kind: 'builtin', family: preview, label: preview, scale: value };
+    applyFont(next);
+    cacheFont(next);
+    await api.setSetting('ui.fontScale', String(value));
+  };
+
+  const hasCustom = Boolean(state?.active);
+  const currentId = (() => {
+    try {
+      return localStorage.getItem('gp.fontChoice') ?? 'vazirmatn';
+    } catch {
+      return 'vazirmatn';
+    }
+  })();
+
+  return (
+    <div className="space-y-3">
+      {/* پیش‌نمایش */}
+      <div className="rounded-xl p-3" style={{ border: '1px solid var(--edge)' }}>
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <Type size={14} style={{ color: 'var(--brand)' }} />
+          <p className="font-bold text-[12.5px]">
+            {hasCustom ? `فونت بارگذاری‌شده: ${state.label}` : `فونت فعلی: ${preview}`}
+          </p>
+          <div className="flex-1" />
+          {hasCustom ? (
+            <span className="chip" style={{ color: 'var(--ok)', borderColor: 'var(--ok)' }}>سفارشی</span>
+          ) : null}
+        </div>
+        <p className="text-[13px] leading-8" style={{ fontFamily: hasCustom ? 'var(--app-font)' : preview }}>
+          باشگاه هم‌خوانی — اعضا، قرارداد، تردد
+        </p>
+        <p className="text-[11.5px] leading-7" style={{ fontFamily: hasCustom ? 'var(--app-font)' : preview, color: 'var(--muted)' }}>
+          شناسهٔ عضویت: ۱۲۳۴۵ · مبلغ: ۲٬۵۰۰٬۰۰۰ ریال · ۱۴۰۵/۰۸/۳۰
+        </p>
+        <p className="text-[11px] mt-1" style={{ color: 'var(--muted)' }}>
+          اگر متن بالا با بقیهٔ برنامه یکسان نیست، اعمال نشده است.
+        </p>
+      </div>
+
+      {/* انتخاب فونت آماده */}
+      <div>
+        <p className="label">انتخاب فونت</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {BUILTIN_FONTS.map((f) => {
+            const active = !hasCustom && currentId === f.id;
+            return (
+              <button
+                key={f.id}
+                onClick={() => pick(f)}
+                aria-pressed={active}
+                className="rounded-lg px-3 py-2 text-right flex items-start gap-2"
+                style={{
+                  border: `1px solid ${active ? 'var(--brand)' : 'var(--edge)'}`,
+                  background: active ? 'var(--brand-wash)' : 'transparent',
+                }}
+              >
+                <span className="shrink-0 mt-0.5" style={{ color: active ? 'var(--brand)' : 'var(--edge-strong)' }}>
+                  {active ? <CheckCircle2 size={14} /> : <span className="inline-block w-3.5 h-3.5 rounded-full" style={{ border: '1px solid var(--edge-strong)' }} />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="text-[12.5px] font-bold block" style={{ fontFamily: f.family }}>{f.label}</span>
+                  {/* نمونه‌متن با همان فونت تا کاربر تفاوت را ببیند */}
+                  <span className="text-[11px] block leading-6" style={{ fontFamily: f.family }}>باشگاه — ۱۲۳۴۵</span>
+                  <span className="text-[10px] block" style={{ color: 'var(--muted)' }}>{f.hint}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* بارگذاری فایل */}
+      <div className="rounded-lg p-3" style={{ border: '1px dashed var(--edge-strong)' }}>
+        <p className="font-bold text-[12.5px] mb-1">بارگذاری فونت از فایل</p>
+        <p className="text-[11px] leading-6 mb-2" style={{ color: 'var(--muted)' }}>
+          فایل <code dir="ltr">.woff2</code>، <code dir="ltr">.woff</code>، <code dir="ltr">.ttf</code> یا <code dir="ltr">.otf</code> تا ۸ مگابایت.
+          فونت در پوشهٔ داده (<span dir="ltr">data/fonts</span>) ذخیره می‌شود و با به‌روزرسانی برنامه پاک نمی‌شود.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={upload} disabled={busy === 'upload'} icon={<Upload size={13} />}>
+            {busy === 'upload' ? 'در حال بارگذاری…' : 'انتخاب فایل فونت'}
+          </Button>
+          {hasCustom ? (
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmReset(true)}
+              disabled={busy === 'reset'}
+              icon={<X size={13} />}
+            >
+              {busy === 'reset' ? 'در حال حذف…' : 'حذف فونت سفارشی'}
+            </Button>
+          ) : null}
+        </div>
+        {hasCustom ? (
+          <p className="text-[11px] mt-2" style={{ color: 'var(--muted)' }}>
+            {state.label} · {(state.size / 1024).toFixed(0)} کیلوبایت · خانوادهٔ داخلی: <span dir="ltr">{state.family}</span>
+          </p>
+        ) : null}
+      </div>
+
+      {/* اندازه */}
+      <div>
+        <p className="label">اندازهٔ متن</p>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { v: 0.9, l: 'کوچک' },
+            { v: 1, l: 'معمولی' },
+            { v: 1.1, l: 'بزرگ' },
+            { v: 1.2, l: 'بزرگ‌تر' },
+          ].map((o) => (
+            <button
+              key={o.v}
+              onClick={() => changeScale(o.v)}
+              aria-pressed={Math.abs(scale - o.v) < 0.01}
+              className="rounded-lg px-3 py-1.5 text-[12px]"
+              style={{
+                border: `1px solid ${Math.abs(scale - o.v) < 0.01 ? 'var(--brand)' : 'var(--edge)'}`,
+                background: Math.abs(scale - o.v) < 0.01 ? 'var(--brand-wash)' : 'transparent',
+              }}
+            >
+              {o.l}
+              <span className="block text-[10px] tabular-nums" style={{ opacity: 0.75 }} dir="ltr">{Math.round(o.v * 100)}%</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] mt-1" style={{ color: 'var(--muted)' }}>
+          اندازهٔ متن همهٔ صفحه‌ها تغییر می‌کند و همین حالا اعمال می‌شود. پیش‌فرض ۱۰۰٪ است.
+        </p>
+      </div>
+
+      {/* تأیید حذف فونت سفارشی */}
+      <Modal
+        open={confirmReset}
+        onClose={() => setConfirmReset(false)}
+        title="حذف فونت سفارشی"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmReset(false)}>انصراف</Button>
+            <Button
+              onClick={async () => {
+                setConfirmReset(false);
+                await reset();
+              }}
+              icon={<X size={13} />}
+            >
+              حذف و بازگشت به وزیرمتن
+            </Button>
+          </>
+        }
+      >
+        <p className="text-[12.5px] leading-7">
+          فایل فونت از پوشهٔ داده حذف می‌شود و برنامه به فونت «وزیرمتن» برمی‌گردد. این کار بر اعضا و داده‌ها اثری ندارد.
+        </p>
       </Modal>
     </div>
   );

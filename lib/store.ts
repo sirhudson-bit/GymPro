@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { todayJalali, parseJalaliInput, formatJalali, toPersianDigits } from './format';
 import { applyAccent, DEFAULT_ACCENT, watchTheme } from './theme';
+import { applyFont, readCachedFont } from './font';
 
 export type Toast = { id: number; message: string; tone: 'ok' | 'bad' | 'warn' };
 
@@ -125,6 +126,9 @@ export function initTheme() {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.tint = tint ? 'on' : 'off';
   applyAccent(accent, theme);
+  /* فونت کش‌شده را پیش از اولین رندر اعمال کن تا پرش فونت نداشته باشیم */
+  const cachedFont = readCachedFont();
+  if (cachedFont) applyFont(cachedFont);
   watchTheme((t) => useStore.setState({ theme: t }));
   useStore.setState({ theme, accent, tint });
   return theme;

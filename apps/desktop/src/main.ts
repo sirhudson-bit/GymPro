@@ -63,6 +63,13 @@ const MIME: Record<string, string> = {
   '.map': 'application/json; charset=utf-8',
 };
 
+const FONT_MIME: Record<string, string> = {
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+};
+
 async function registerAppProtocol() {
   const root = rendererRoot();
   protocol.handle('app', async (request) => {
@@ -70,6 +77,24 @@ async function registerAppProtocol() {
       const url = new URL(request.url);
       let rel = decodeURIComponent(url.pathname);
       if (rel === '' || rel === '/') rel = '/index.html';
+      /* فونت‌های بارگذاری‌شده در data/fonts هستند، نه داخل بستهٔ برنامه */
+      if (rel.startsWith('/user-fonts/')) {
+        const name = path.basename(rel);
+        const fontFile = path.resolve(path.join(paths.root, 'fonts', name));
+        if (!fontFile.startsWith(path.resolve(path.join(paths.root, 'fonts'))) || !fs.existsSync(fontFile)) {
+          return new Response('not found', { status: 404 });
+        }
+        const data = fs.readFileSync(fontFile);
+        return new Response(data, {
+          status: 200,
+          headers: new Headers({
+            'content-type': FONT_MIME[path.extname(fontFile).toLowerCase()] ?? 'application/octet-stream',
+            'content-security-policy': CSP,
+            'x-content-type-options': 'nosniff',
+            'cache-control': 'no-store',
+          }),
+        });
+      }
       const resolved = path.resolve(path.join(root, rel));
       if (!resolved.startsWith(path.resolve(root))) {
         return new Response('forbidden', { status: 403 });

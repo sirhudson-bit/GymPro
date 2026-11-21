@@ -32,6 +32,9 @@ export function onEvent(cb: (event: { type: string; payload: unknown }) => void)
 
 export const api = {
   info: () => call('app:info'),
+  fontState: () => call('font:state'),
+  fontUpload: (path?: string) => call('font:upload', path ? { path } : {}),
+  fontReset: () => call('font:reset'),
   bootstrap: () => call('app:bootstrap'),
   setup: (p: unknown) => call('setup:run', p),
   login: (p: { username: string; password: string; remember?: boolean }) => call('auth:login', p),

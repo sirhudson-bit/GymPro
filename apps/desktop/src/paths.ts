@@ -11,10 +11,11 @@ export type DataPaths = {
   logs: string;
   updates: string;
   help: string;
+  fonts: string;
   portableWarning: boolean;
 };
 
-const SUB = ['backups', 'photos', 'attachments', 'logs', 'updates', 'help'];
+const SUB = ['backups', 'photos', 'attachments', 'logs', 'updates', 'help', 'fonts'];
 
 function probeWritable(dir: string): boolean {
   const probe = path.join(dir, `.write-test-${Date.now()}`);
@@ -68,6 +69,7 @@ export function resolveDataPaths(): DataPaths {
     logs: path.join(root, 'logs'),
     updates: path.join(root, 'updates'),
     help: path.join(root, 'help'),
+    fonts: path.join(root, 'fonts'),
     portableWarning,
   };
 }

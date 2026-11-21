@@ -34,6 +34,7 @@ const PUBLIC_CHANNELS = new Set([
   'auth:resetWithCode',
   'auth:resetWithToken',
   'license:status',
+  'font:state', // خواندنی است و صفحهٔ ورود هم باید فونت انتخابی را نشان دهد
   'license:machineId',
 ]);
 
@@ -56,6 +57,30 @@ function role(...allowed: string[]) {
 
 export function registerIpc(deps: { dataDir: string; openDataDir: () => void; nightlyBackup: () => unknown }) {
   const table: Record<string, Handler> = {
+    /* ─────────── فونت سفارشی ─────────── */
+    'font:state': () => readFontState(deps.dataDir),
+    'font:upload': async (p) => {
+      const u = auth();
+      role('owner', 'manager');
+      const source = String(p?.path ?? '');
+      if (!source) {
+        // بدون مسیر: دیالوگ انتخاب فایل
+        const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+        const res = await dialog.showOpenDialog(win, {
+          title: 'انتخاب فایل فونت',
+          properties: ['openFile'],
+          filters: [{ name: 'فونت', extensions: ['woff2', 'woff', 'ttf', 'otf'] }],
+        });
+        if (res.canceled || !res.filePaths.length) return { canceled: true };
+        return installFontFile(deps.dataDir, res.filePaths[0], u.id);
+      }
+      return installFontFile(deps.dataDir, source, u.id);
+    },
+    'font:reset': () => {
+      role('owner', 'manager');
+      return resetFont(deps.dataDir);
+    },
+
     'app:info': () => ({
       version: app.getVersion(),
       dataDir: deps.dataDir,
@@ -731,4 +756,140 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
   }
 
   return Object.keys(table);
+}
+
+/* ─────────── فونت سفارشی: اعتبارسنجی و نصب ─────────── */
+
+const FONT_EXT = ['.woff2', '.woff', '.ttf', '.otf'];
+const MAX_FONT_BYTES = 8 * 1024 * 1024;
+
+/** نام دلخواه از نام فایل: «Vazirmatn-Bold.woff2» → «Vazirmatn Bold» */
+function fontLabelFromFile(file: string): string {
+  return path
+    .basename(file, path.extname(file))
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\b(regular|normal)\b/gi, '')
+    .trim() || 'فونت سفارشی';
+}
+
+/** نام خانوادهٔ واقعی را از جدول نام فونت می‌خوانیم تا CSS درست باشد */
+function readFontFamily(buffer: Buffer, ext: string): string | null {
+  try {
+    if (ext === '.ttf' || ext === '.otf') {
+      const numTables = buffer.readUInt16BE(4);
+      for (let i = 0; i < numTables; i++) {
+        const off = 12 + i * 16;
+        if (buffer.toString('latin1', off, off + 4) !== 'name') continue;
+        const tableOff = buffer.readUInt32BE(off + 8);
+        const count = buffer.readUInt16BE(tableOff + 2);
+        const stringsOff = tableOff + buffer.readUInt16BE(tableOff + 4);
+        for (let r = 0; r < count; r++) {
+          const rec = tableOff + 6 + r * 12;
+          const platformId = buffer.readUInt16BE(rec);
+          const nameId = buffer.readUInt16BE(rec + 6);
+          if (nameId !== 1 && nameId !== 16) continue; // Family / Typographic Family
+          const len = buffer.readUInt16BE(rec + 8);
+          const strOff = stringsOff + buffer.readUInt16BE(rec + 10);
+          const raw = buffer.subarray(strOff, strOff + len);
+          const text = platformId === 3 || platformId === 0 ? raw.swap16().toString('utf16le') : raw.toString('latin1');
+          const clean = text.replace(/[\u0000-\u001f]/g, '').trim();
+          if (clean && /^[\w\s\-.]{2,60}$/.test(clean)) return clean;
+        }
+      }
+      return null;
+    }
+    if (ext === '.woff2') {
+      // woff2: هدر ۴۸ بایتی، جدول name فشرده — فقط برچسب فایل را نگه می‌داریم
+      return null;
+    }
+    if (ext === '.woff') {
+      const numTables = buffer.readUInt16BE(12);
+      for (let i = 0; i < numTables; i++) {
+        const off = 44 + i * 20;
+        if (buffer.toString('latin1', off, off + 4) !== 'name') continue;
+        const tableOff = buffer.readUInt32BE(off + 4);
+        const count = buffer.readUInt16BE(tableOff + 2);
+        const stringsOff = tableOff + buffer.readUInt16BE(tableOff + 4);
+        for (let r = 0; r < count; r++) {
+          const rec = tableOff + 6 + r * 12;
+          const platformId = buffer.readUInt16BE(rec);
+          const nameId = buffer.readUInt16BE(rec + 6);
+          if (nameId !== 1 && nameId !== 16) continue;
+          const len = buffer.readUInt16BE(rec + 8);
+          const strOff = stringsOff + buffer.readUInt16BE(rec + 10);
+          const raw = buffer.subarray(strOff, strOff + len);
+          const text = platformId === 3 || platformId === 0 ? raw.swap16().toString('utf16le') : raw.toString('latin1');
+          const clean = text.replace(/[\u0000-\u001f]/g, '').trim();
+          if (clean && /^[\w\s\-.]{2,60}$/.test(clean)) return clean;
+        }
+      }
+      return null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+export function readFontState(dataDir: string) {
+  const dir = path.join(dataDir, 'fonts');
+  const active = settings.get('ui.fontFile', '');
+  const file = active ? path.join(dir, active) : '';
+  const exists = Boolean(file) && fs.existsSync(file);
+  return {
+    active: exists ? active : '',
+    family: exists ? settings.get('ui.fontFamily', '') : '',
+    label: exists ? settings.get('ui.fontLabel', '') : '',
+    size: exists ? fs.statSync(file).size : 0,
+    scale: Number(settings.get('ui.fontScale', '1')) || 1,
+    defaults: { family: 'Vazirmatn', scale: 1 },
+    url: exists ? `app://gympro/user-fonts/${active}` : '',
+  };
+}
+
+export function installFontFile(dataDir: string, source: string, userId: string | null) {
+  const ext = path.extname(source).toLowerCase();
+  if (!FONT_EXT.includes(ext)) throw new Error('فقط فایل woff2، woff، ttf یا otf پشتیبانی می‌شود');
+  if (!fs.existsSync(source)) throw new Error('فایل انتخابی پیدا نشد');
+  const size = fs.statSync(source).size;
+  if (size > MAX_FONT_BYTES) throw new Error('حجم فونت بیش از ۸ مگابایت است');
+  if (size < 1024) throw new Error('فایل فونت معتبر نیست (بسیار کوچک)');
+
+  const buffer = fs.readFileSync(source);
+  // امضای فایل: wOF2 / wOFF / \x00\x01\x00\x00 (TrueType) / OTTO
+  const sig = buffer.subarray(0, 4).toString('latin1');
+  const valid = sig === 'wOF2' || sig === 'wOFF' || sig === 'OTTO' || buffer.readUInt32BE(0) === 0x00010000;
+  if (!valid) throw new Error('این فایل یک فونت معتبر نیست');
+
+  const dir = path.join(dataDir, 'fonts');
+  fs.mkdirSync(dir, { recursive: true });
+  const fileName = `custom${ext}`;
+  const target = path.join(dir, fileName);
+  // فایل قبلی پاک شود تا حجم داده دو برابر نشود
+  for (const f of fs.readdirSync(dir)) {
+    if (f.startsWith('custom')) fs.rmSync(path.join(dir, f), { force: true });
+  }
+  fs.copyFileSync(source, target);
+
+  const family = readFontFamily(buffer, ext) || fontLabelFromFile(source);
+  settings.set('ui.fontFile', fileName);
+  settings.set('ui.fontFamily', family);
+  settings.set('ui.fontLabel', fontLabelFromFile(source));
+  log.info('font.installed', { file: fileName, family, size, userId });
+
+  const state = readFontState(dataDir);
+  return { ...state, installed: true };
+}
+
+export function resetFont(dataDir: string) {
+  const dir = path.join(dataDir, 'fonts');
+  if (fs.existsSync(dir)) {
+    for (const f of fs.readdirSync(dir)) fs.rmSync(path.join(dir, f), { force: true });
+  }
+  settings.set('ui.fontFile', '');
+  settings.set('ui.fontFamily', '');
+  settings.set('ui.fontLabel', '');
+  log.info('font.reset', {});
+  return readFontState(dataDir);
 }
