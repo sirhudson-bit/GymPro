@@ -25,3 +25,6 @@ server/releases/
 *.sqlite
 .session
 tsconfig.tsbuildinfo
+# installer staged for public download (large binary, created by scripts/stage-download.py)
+server/downloads/
+server/public/

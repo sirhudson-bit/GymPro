@@ -47,6 +47,10 @@
 | فونت — انتخاب آماده | پنل «فونت برنامه» در تنظیمات: انتخاب «تاهوما» → `--app-font=Tahoma`، `getComputedStyle(body).fontFamily="Tahoma, Vazirmatn…"`، `localStorage.gp.font` ذخیره شد، تیک انتخاب روی همان کارت، و پس از reload هم Tahoma ماند | CDP + `docs/shots/font-panel.png` |
 | فونت — بارگذاری فایل | فایل واقعی ۲۱KB `.woff2` بارگذاری شد → `data/fonts/custom.woff2`، خانواده «NotoTest Bold»، سرو شدن `app://gympro/user-fonts/custom.woff2` با `200 font/woff2` و ۲۱۷۲۸ بایت؛ `document.fonts.check('14px GymProCustom')=true` و وضعیت `loaded`؛ از صفحهٔ ورود هم اعمال شد | CDP + `docs/shots/font-panel.png` |
 | فونت — حذف و اندازه | «حذف فونت سفارشی» با مودال تأیید → پوشهٔ `data/fonts` خالی و بازگشت به `Vazirmatn`؛ اندازهٔ «بزرگ ۱۱۰٪» → `--app-font-scale=1.1` و `font-size=15.4px` | CDP |
+| لندینگ عمومی | `https://gym.academyr.ir/` بدون کوکی: `200` و عنوان سه‌خطی؛ آیکون `200 image/png`؛ `/img/app-dashboard.png` ۵۸٬۴۵۹ بایت؛ `info.json` نسخهٔ ۱.۲.۲ و ۱۷۷٬۳۵۹٬۸۶۵ بایت | curl زنده + اسکرین‌شات |
+| دسترسی فقط مالک | `/dashboard`, `/licenses`, `/updates`, `/tickets`, `/help` بدون کوکی → `303 → /login`؛ `POST /licenses/create` بدون ورود → `303` و `keys.json` ساخته نشد؛ با رمز درست: ورود `303 → /dashboard` و همهٔ صفحات `200` و ساخت کلید `GP-LAND-ING1-TEST` انجام شد | curl با/بدون کوکی |
+| دانلود از سایت | `/download/GymPro-Setup.exe` با `content-type: application/octet-stream` و `content-disposition`؛ `/download/info.json` و `.sha256` سرو می‌شوند؛ sha256 سرور با فایل محلی یکی است | curl + `sha256sum` |
+| واکنش‌گرای لندینگ | دسکتاپ ۱۴۴۰ و موبایل ۳۹۰: سرریز افقی `0`؛ در موبایل دکمه‌ها عمودی و آمار ۲×۲ | CDP `scrollWidth - innerWidth` |
 | آیکون برنامه | از `WDC-e128135f.png` آیکون مربعی ساخته شد (پس‌زمینهٔ تیرهٔ برند، لوگوی کامل بدون برش): `build/icon.ico` با ۹ اندازهٔ ۱۶ تا ۲۵۶ (برای اندازه‌های کوچک لوگو بزرگ‌تر رندر شده) + `build/tray.png` شفاف برای سینی؛ آیکون از فایل exe استخراج و تأیید شد | `ExtractAssociatedIcon` روی `dist/win-unpacked/GymPro.exe` |
 
 ## آنچه تست نشده (صادقانه)

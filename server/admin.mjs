@@ -14,6 +14,19 @@ const ACT_FILE = path.join(DATA, 'activations.json');
 const TICKETS_FILE = path.join(DATA, 'tickets.json');
 const ADMIN_FILE = path.join(DATA, 'admin.json');
 const MANIFEST_FILE = path.join(DATA, 'manifest.signed.json');
+// روی سرور: server/public (فایل‌های منتشرشده). در مخزن: landing/ (منبع یکتا)
+const PUBLIC_DIR = fs.existsSync(path.join(__dirname, 'public', 'landing.html'))
+  ? path.join(__dirname, 'public')
+  : path.join(__dirname, '..', 'landing');
+const DOWNLOAD_DIR = path.join(__dirname, 'downloads');
+const DOWNLOAD_TEXT = path.join(DOWNLOAD_DIR, 'info.json');
+const LANDING_FILE = (() => {
+  for (const name of ['landing.html', 'index.html']) {
+    const candidate = path.join(PUBLIC_DIR, name);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return path.join(PUBLIC_DIR, 'landing.html');
+})();
 const PORT = Number(process.env.PORT ?? 8899);
 // پیش‌فرض فقط loopback: پنل باید پشت nginx با TLS بیاید، نه روی IP خام.
 const HOST = process.env.HOST ?? '127.0.0.1';
@@ -213,7 +226,7 @@ function loginPage(error) {
         <input type="password" name="password" autofocus required aria-label="رمز مدیر">
         <div style="margin-top:1rem"><button type="submit">ورود</button></div>
       </form>
-      <p class="muted" style="margin-top:1rem">رمز در <code>server/data/admin.json</code> ذخیره شده و با متغیر محیطی <code>ADMIN_PASSWORD</code> قابل تغییر است.</p>
+      <p class="muted" style="margin-top:1rem">این پنل فقط برای مالک نرم‌افزار است. حساب دیگری ساخته نمی‌شود و ثبت‌نامی وجود ندارد.</p>
     </div>`,
   });
 }
@@ -518,6 +531,70 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ ok: true, service: 'gympro-admin', time: new Date().toISOString() }));
     }
 
+    /* ─────────── لندینگ عمومی (بدون ورود) ─────────── */
+    if ((url.pathname === '/' || url.pathname === '/index.html') && req.method === 'GET') {
+      if (!fs.existsSync(LANDING_FILE)) {
+        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+        return res.end('landing missing');
+      }
+      const html = fs.readFileSync(LANDING_FILE);
+      res.writeHead(200, {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'public, max-age=300',
+        'x-content-type-options': 'nosniff',
+      });
+      return res.end(html);
+    }
+
+    /* فایل‌های لندینگ: /img/*، /icon.png و … */
+    if (req.method === 'GET' && /^\/(img|landing)\//.test(url.pathname)) {
+      const rel = decodeURIComponent(url.pathname).replace(/^\/(img|landing)\//, '');
+      const file = path.resolve(path.join(PUBLIC_DIR, rel.startsWith('img/') ? rel : `img/${rel}`));
+      if (!file.startsWith(path.resolve(PUBLIC_DIR)) || !fs.existsSync(file)) {
+        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+        return res.end('not found');
+      }
+      const ext = path.extname(file).toLowerCase();
+      const mime = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.woff2': 'font/woff2', '.css': 'text/css; charset=utf-8' }[ext] ?? 'application/octet-stream';
+      const data = fs.readFileSync(file);
+      res.writeHead(200, { 'content-type': mime, 'cache-control': 'public, max-age=86400', 'x-content-type-options': 'nosniff' });
+      return res.end(data);
+    }
+
+    /* آیکون‌های لندینگ در ریشه */
+    if (req.method === 'GET' && /^\/(icon(-mark(-sm)?)?\.png)$/.test(url.pathname)) {
+      const file = path.join(PUBLIC_DIR, path.basename(url.pathname));
+      if (!fs.existsSync(file)) {
+        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+        return res.end('not found');
+      }
+      res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' });
+      return res.end(fs.readFileSync(file));
+    }
+
+    /* ─────────── دانلود نصب‌کننده ─────────── */
+    if (req.method === 'GET' && url.pathname === '/download/info.json') {
+      const info = fs.existsSync(DOWNLOAD_TEXT) ? fs.readFileSync(DOWNLOAD_TEXT) : Buffer.from('{}');
+      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+      return res.end(info);
+    }
+    if (req.method === 'GET' && url.pathname.startsWith('/download/')) {
+      const name = path.basename(decodeURIComponent(url.pathname));
+      const file = path.resolve(path.join(DOWNLOAD_DIR, name));
+      if (!file.startsWith(path.resolve(DOWNLOAD_DIR)) || !fs.existsSync(file)) {
+        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+        return res.end('not found');
+      }
+      const data = fs.readFileSync(file);
+      res.writeHead(200, {
+        'content-type': 'application/octet-stream',
+        'content-length': data.length,
+        'content-disposition': `attachment; filename="${name}"`,
+        'cache-control': 'no-store',
+      });
+      return res.end(data);
+    }
+
     if (url.pathname === '/login' && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(loginPage(null));
@@ -686,7 +763,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    if (url.pathname === '/' || url.pathname === '/dashboard') {
+    if (url.pathname === '/dashboard') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(dashboardPage(session));
     }

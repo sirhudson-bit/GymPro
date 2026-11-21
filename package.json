@@ -1,6 +1,6 @@
 {
   "name": "gympro",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "GymPro — نرم‌افزار مدیریت باشگاه بدنسازی (دسکتاپ، آفلاین، پرتابل)",
   "main": "apps/desktop/dist/main.cjs",
