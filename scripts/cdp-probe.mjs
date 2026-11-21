@@ -19,7 +19,7 @@ function send(method, params = {}) {
   ws.send(JSON.stringify({ id: msgId, method, params }));
   return new Promise((resolve, reject) => {
     pending.set(msgId, { resolve, reject });
-    setTimeout(() => reject(new Error(`timeout ${method}`)), 15000);
+    setTimeout(() => reject(new Error(`timeout ${method}`)), 60000);
   });
 }
 

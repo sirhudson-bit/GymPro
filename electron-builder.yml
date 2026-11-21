@@ -10,7 +10,8 @@ directories:
   output: dist
   buildResources: build
 files:
-  - apps/desktop/dist/**/*
+  - apps/desktop/dist/**/*.js
+  - apps/desktop/dist/**/*.cjs
   - out/**/*
   - packages/db/migrations/**/*
   - legal/**/*
@@ -23,14 +24,33 @@ extraMetadata:
   main: apps/desktop/dist/main.cjs
 win:
   target:
-    - target: portable
+    - target: nsis
       arch:
         - x64
   icon: build/icon.ico
   executableName: GymPro
   requestedExecutionLevel: asInvoker
   legalTrademarks: GymPro
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: GymPro
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  artifactName: GymPro-Setup-${version}.exe
+  include: build/installer.nsh
 portable:
   artifactName: GymPro-Portable-${version}.exe
   unpackDirName: GymPro
-  splashImage: null
+publish:
+  provider: github
+  owner: sirhudson-bit
+  repo: GymPro
+  releaseType: release

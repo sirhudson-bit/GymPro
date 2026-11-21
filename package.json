@@ -22,6 +22,7 @@
     "jsbarcode": "^3.11.6",
     "lucide-react": "^0.460.0",
     "next": "^15.1.9",
+    "node-zklib": "^1.3.0",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",

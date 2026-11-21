@@ -16,6 +16,8 @@ export type ViewKey =
   | 'pos'
   | 'classes'
   | 'lockers'
+  | 'biometric'
+
   | 'reports'
   | 'support'
   | 'settings'

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, Database, FolderOpen, HardDriveDownload, KeyRound, Plus, ShieldCheck, UserPlus } from 'lucide-react';
+import { Copy, Database, Download, FolderOpen, GitBranch, HardDriveDownload, KeyRound, Plus, RefreshCw, ShieldCheck, UserPlus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import { ACCENT_PRESETS, DEFAULT_ACCENT, deriveAccent } from '@/lib/theme';
@@ -137,6 +137,10 @@ export default function Settings({ onPortableWarning }: { onPortableWarning?: (v
           این برنامه هیچ داده‌ای را به‌صورت پیش‌فرض ارسال نمی‌کند. تنها همین دو سرور (که خودتان وارد می‌کنید) و سرویس پیامک، مسیرهای خروج داده هستند.
         </div>
       </Section>
+
+          <Section title="به‌روزرسانی نرم‌افزار" defaultOpen>
+            <UpdatePanel toast={toast} />
+          </Section>
 
       <Section title="پشتیبان‌گیری" defaultOpen>
         <div className="flex flex-wrap gap-2 mb-3">
@@ -322,6 +326,150 @@ export default function Settings({ onPortableWarning }: { onPortableWarning?: (v
           <Field label="PIN (۴ رقم)"><TextInput id="nu-pin" dir="ltr" style={{ textAlign: 'right' }} aria-label="PIN" /></Field>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+/* ─────────── به‌روزرسانی: گیت + انتشار ─────────── */
+
+function UpdatePanel({ toast }: { toast: (m: string, t?: 'ok' | 'bad') => void }) {
+  const [git, setGit] = useState<any>(null);
+  const [busy, setBusy] = useState('');
+  const [release, setRelease] = useState<any>(null);
+  const [downloaded, setDownloaded] = useState<string>('');
+
+  const loadGit = useCallback(async () => {
+    try {
+      setGit(await api.gitStatus());
+    } catch (e: any) {
+      setGit({ available: false, error: e.message });
+    }
+  }, []);
+
+  useEffect(() => {
+    loadGit();
+  }, [loadGit]);
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg p-3" style={{ border: '1px solid var(--edge)' }}>
+        <p className="font-bold text-[12.5px] flex items-center gap-1.5 mb-1"><GitBranch size={14} /> به‌روزرسانی از مخزن گیت</p>
+        <p className="text-[11.5px] leading-6" style={{ color: 'var(--muted)' }}>
+          فقط برای نصبی که از منبع گیت ساخته شده. وضعیت را می‌خواند و با تأیید تو، <span dir="ltr">git pull</span> و بازسازی را انجام می‌دهد.
+        </p>
+        {git ? (
+          git.available ? (
+            <div className="text-[11.5px] mt-2 space-y-1">
+              <p>شاخه: <b>{git.branch}</b> · نسخهٔ محلی: <span dir="ltr">{String(git.localSha).slice(0, 8)}</span> · ریموت: <span dir="ltr">{String(git.remoteSha).slice(0, 8)}</span></p>
+              <p style={{ color: git.behind > 0 ? 'var(--warn)' : 'var(--ok)' }}>
+                {git.behind > 0 ? `${toPersianDigits(git.behind)} کامیت جدید در ریموت` : 'برنامه به‌روز است'}
+              </p>
+              {git.behind > 0 && git.files?.length ? (
+                <details>
+                  <summary className="cursor-pointer">فایل‌های تغییرکرده ({toPersianDigits(git.files.length)})</summary>
+                  <ul className="mt-1 pr-4 list-disc" dir="ltr" style={{ textAlign: 'left' }}>
+                    {git.files.map((f: string) => <li key={f} className="text-[11px]">{f}</li>)}
+                  </ul>
+                </details>
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-[11.5px] mt-2" style={{ color: 'var(--muted)' }}>{git.error ?? 'منبع گیت پیدا نشد'}</p>
+          )
+        ) : (
+          <p className="text-[11.5px] mt-2" style={{ color: 'var(--muted)' }}>در حال خواندن وضعیت…</p>
+        )}
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Button variant="ghost" onClick={loadGit} icon={<RefreshCw size={13} />}>بررسی مجدد</Button>
+          <Button
+            disabled={!git?.available || git?.behind === 0 || busy === 'git'}
+            onClick={async () => {
+              setBusy('git');
+              try {
+                const res: any = await api.gitPull();
+                toast(res.message ?? 'به‌روزرسانی انجام شد');
+                await loadGit();
+              } catch (e: any) {
+                toast(e.message, 'bad');
+              } finally {
+                setBusy('');
+              }
+            }}
+            icon={<GitBranch size={13} />}
+          >
+            {busy === 'git' ? 'در حال به‌روزرسانی…' : 'به‌روزرسانی از گیت'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-lg p-3" style={{ border: '1px solid var(--edge)' }}>
+        <p className="font-bold text-[12.5px] flex items-center gap-1.5 mb-1"><Download size={14} /> نسخهٔ نصب‌شدنی (GitHub Releases)</p>
+        <p className="text-[11.5px] leading-6" style={{ color: 'var(--muted)' }}>
+          مانیفست امضاشده با Ed25519 بررسی می‌شود؛ اگر امضا یا sha256 نخواند، نصب انجام نمی‌شود.
+        </p>
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              setBusy('check');
+              try {
+                const res: any = await api.checkUpdate(false);
+                setRelease(res);
+                toast(res.available ? `نسخهٔ ${res.manifest.version} موجود است` : 'نسخهٔ جدیدی نیست');
+              } catch (e: any) {
+                toast(e.message, 'bad');
+              } finally {
+                setBusy('');
+              }
+            }}
+            icon={<RefreshCw size={13} />}
+          >
+            {busy === 'check' ? 'بررسی…' : 'بررسی نسخهٔ جدید'}
+          </Button>
+          <Button
+            variant="ghost"
+            disabled={!release?.available}
+            onClick={async () => {
+              setBusy('download');
+              try {
+                const res: any = await api.downloadUpdate();
+                setDownloaded(res.file);
+                toast('فایل آپدیت دانلود و با امضا بررسی شد');
+              } catch (e: any) {
+                toast(e.message, 'bad');
+              } finally {
+                setBusy('');
+              }
+            }}
+            icon={<Download size={13} />}
+          >
+            {busy === 'download' ? 'دانلود…' : 'دانلود نسخهٔ جدید'}
+          </Button>
+          <Button
+            disabled={!downloaded}
+            onClick={async () => {
+              try {
+                await api.installUpdate(downloaded);
+                toast('نصب‌کننده باز شد');
+              } catch (e: any) {
+                toast(e.message, 'bad');
+              }
+            }}
+          >
+            نصب و راه‌اندازی مجدد
+          </Button>
+        </div>
+        {release ? (
+          <div className="text-[11.5px] mt-2 space-y-1">
+            <p>نسخهٔ فعلی: <b>{release.current}</b> · آخرین نسخه: <b>{release.manifest?.version ?? '—'}</b>{release.manifest?.mandatory ? ' (اجباری)' : ''}</p>
+            {release.manifest?.notes?.length ? (
+              <ul className="pr-4 list-disc" style={{ color: 'var(--muted)' }}>
+                {release.manifest.notes.map((n: string) => <li key={n}>{n}</li>)}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

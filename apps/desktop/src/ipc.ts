@@ -1,4 +1,6 @@
 import { ipcMain, shell, app, dialog, BrowserWindow } from 'electron';
+import { biometric, bioDevices, bioUserMap } from './biometric-bridge';
+import { gitStatus, gitPullAndBuild, checkForUpdate, downloadUpdate, installDownloaded } from './updater';
 import fs from 'node:fs';
 import path from 'node:path';
 import QRCode from 'qrcode';
@@ -520,6 +522,73 @@ export function registerIpc(deps: { dataDir: string; openDataDir: () => void; ni
     'reports:series': (p) => reports.series(Number(p?.days ?? 30)),
     'reports:monthly': () => reports.monthly(),
     'reports:churn': () => reports.churn(),
+
+    /* ─────────── دستگاه اثر انگشت (ZKTeco / Suprema / Futronic) ─────────── */
+    'bio:devices': () => bioDevices.list(),
+    'bio:deviceCreate': (p) => {
+      role('owner', 'manager');
+      return bioDevices.create(p ?? {});
+    },
+    'bio:deviceUpdate': (p) => {
+      role('owner', 'manager');
+      return bioDevices.update(p ?? {});
+    },
+    'bio:deviceRemove': (p) => {
+      role('owner', 'manager');
+      return bioDevices.remove(String(p.id));
+    },
+    'bio:deviceTest': (p) => {
+      role('owner', 'manager');
+      return bioDevices.test(String(p.id));
+    },
+    'bio:sync': async (p) => {
+      const u = auth();
+      return bioDevices.sync(String(p.id), u.id);
+    },
+    'bio:syncAll': async () => {
+      const u = auth();
+      return bioDevices.syncAll(u.id);
+    },
+    'bio:simulate': (p) => {
+      role('owner', 'manager');
+      return bioDevices.simulate({ deviceId: String(p.deviceId), userNo: String(p.userNo), direction: p.direction ?? null });
+    },
+    'bio:punches': (p) => bioDevices.punches({ deviceId: p?.deviceId ? String(p.deviceId) : undefined, limit: Number(p?.limit ?? 200) }),
+    'bio:enrollment': () => bioDevices.enrollment(),
+    'bio:admsStatus': async () => {
+      const { admsStatus, admsSeen } = await import('./adms');
+      return { ...admsStatus(), seen: admsSeen() };
+    },
+    'bio:mapList': (p) => bioUserMap.list(p?.deviceId ? String(p.deviceId) : undefined),
+    'bio:mapAdd': (p) => {
+      role('owner', 'manager');
+      return bioUserMap.add({ deviceId: String(p.deviceId), userNo: String(p.userNo), memberId: String(p.memberId) });
+    },
+    'bio:mapRemove': (p) => {
+      role('owner', 'manager');
+      return bioUserMap.remove(String(p.id));
+    },
+
+    /* ─────────── به‌روزرسانی (گیت و انتشار) ─────────── */
+    'update:gitStatus': () => gitStatus(),
+    'update:gitPull': () => {
+      role('owner');
+      return gitPullAndBuild();
+    },
+    'update:check': (p) => {
+      role('owner');
+      return checkForUpdate({ force: Boolean(p?.force) });
+    },
+    'update:download': async (p) => {
+      role('owner');
+      const check = await checkForUpdate({ force: true });
+      if (!check.available) throw new Error('نسخهٔ جدیدی موجود نیست');
+      return downloadUpdate(deps.dataDir, check.manifest, check.signature);
+    },
+    'update:install': (p) => {
+      role('owner');
+      return installDownloaded(String(p.file));
+    },
 
     'support:tickets': () => db().all('SELECT * FROM support_tickets WHERE branch_id = ? AND deleted_at IS NULL ORDER BY created_at DESC', db().branchId),
     'support:messages': (p) => db().all('SELECT * FROM support_messages WHERE ticket_id = ? ORDER BY created_at', String(p.ticketId)),

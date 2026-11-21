@@ -145,7 +145,10 @@ export class Db {
         throw e;
       }
     }
-    this.loadIdentity();
+      this.loadIdentity();
+    // مایگریشن‌هایی که جدول را بازمی‌سازند FK را خاموش می‌کنند؛ بعد از پایان دوباره روشن شود
+    this.exec('PRAGMA foreign_keys = ON;');
+
   }
 }
 

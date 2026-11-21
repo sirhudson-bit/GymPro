@@ -9,6 +9,8 @@ import { license } from './license';
 import { registerIpc } from './ipc';
 import { backupNow, dailyBackupIfNeeded } from './backup';
 import { startSupportPoller } from './support-sync';
+import { startAdmsListener, stopAdmsListener } from './adms';
+import { applyAdmsPunch, devices as bioDevicesRepo } from './biometric';
 import { settings } from './repo';
 import { runSmokeTest } from './smoke';
 
@@ -269,6 +271,19 @@ if (!app.requestSingleInstanceLock()) {
       return;
     }
 
+    // شنوندهٔ ADMS برای دستگاه‌های ZKTeco که خودشان push می‌کنند
+    try {
+      const admsPort = Number(settings.get('bio.admsPort', '8090')) || 8090;
+      startAdmsListener(admsPort, (sn, punch) => {
+        const target = bioDevicesRepo.list().find((d) => String((d as { serial_no?: string }).serial_no ?? '') === sn && (d as { mode?: string }).mode === 'adms');
+        if (!target) return;
+        const res = applyAdmsPunch(String((target as { id: string }).id), punch);
+        mainWindow?.webContents.send('app:event', { type: 'bio:punch', payload: { sn, punch, result: res } });
+      });
+    } catch (e) {
+      log.warn('adms.start.failed', { error: String(e) });
+    }
+
     createWindow();
     createTray();
     startSupportPoller(paths.root, (payload) => {
@@ -286,6 +301,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on('before-quit', () => {
     stopping = true;
+    stopAdmsListener();
     log.info('app.quit', { today: todayLocal() });
   });
 }
